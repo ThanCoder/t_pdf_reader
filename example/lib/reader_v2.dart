@@ -6,15 +6,15 @@ import 'package:t_pdf_reader/t_pdf_reader.dart';
 import 'package:t_widgets/t_widgets.dart';
 import 'package:than_pkg/than_pkg.dart';
 
-class Reader extends StatefulWidget {
+class ReaderV2 extends StatefulWidget {
   final String path;
-  const Reader({super.key, required this.path});
+  const ReaderV2({super.key, required this.path});
 
   @override
-  State<Reader> createState() => _ReaderState();
+  State<ReaderV2> createState() => _ReaderV2State();
 }
 
-class _ReaderState extends State<Reader> {
+class _ReaderV2State extends State<ReaderV2> {
   @override
   void initState() {
     super.initState();
@@ -27,6 +27,11 @@ class _ReaderState extends State<Reader> {
     pdfController.dispose();
     super.dispose();
   }
+
+  bool isDarkMode = true;
+  bool isScaleEnable = false;
+  bool isFullscreen = false;
+  final pdfController = TPdfControllerV2();
 
   void init() {
     pdfController.pdfReaderEvent.listen((event) {
@@ -46,11 +51,6 @@ class _ReaderState extends State<Reader> {
       }
     });
   }
-
-  final pdfController = TPdfController();
-  bool isDarkMode = true;
-  bool isScaleEnable = false;
-  bool isFullscreen = false;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +81,7 @@ class _ReaderState extends State<Reader> {
                       color: Colors.white,
                       width: double.infinity,
                       height: double.infinity,
-                      child: TPdfReader(
+                      child: TPdfReaderV2(
                         source: widget.path,
                         controller: pdfController,
                       ),
@@ -199,5 +199,4 @@ class _ReaderState extends State<Reader> {
       },
     );
   }
-
 }

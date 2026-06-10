@@ -2,20 +2,20 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:t_pdf_reader/src/core/low_levels/pdf_document.dart';
-import 'package:t_pdf_reader/src/core/low_levels/pdf_page.dart';
-import 'package:t_pdf_reader/src/core/low_levels/types.dart';
-import 'package:t_pdf_reader/t_pdf_reader.dart';
+import 'package:t_pdf_reader/src/core/events/pdf_reader_event.dart';
+import 'package:t_pdf_reader/src/core/events/user_event.dart';
+import 'package:t_pdf_reader/src/core/low_levels/backgrounds/pdf_background_document.dart';
+import 'package:t_pdf_reader/src/core/low_levels/classes/types.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
-part 't_pdf_controller.dart';
-part 'pdf_reader_page.dart';
+part 't_pdf_controller_v2.dart';
+part 't_pdf_render_page_v2.dart';
 
-class TPdfReader extends StatefulWidget {
+class TPdfReaderV2 extends StatefulWidget {
   final String source;
   final String? password;
-  final TPdfController controller;
-  const TPdfReader({
+  final TPdfControllerV2 controller;
+  const TPdfReaderV2({
     super.key,
     required this.source,
     this.password,
@@ -23,10 +23,10 @@ class TPdfReader extends StatefulWidget {
   });
 
   @override
-  State<TPdfReader> createState() => _TPdfReaderState();
+  State<TPdfReaderV2> createState() => _TPdfReaderV2State();
 }
 
-class _TPdfReaderState extends State<TPdfReader> {
+class _TPdfReaderV2State extends State<TPdfReaderV2> {
   @override
   void initState() {
     super.initState();
@@ -45,7 +45,7 @@ class _TPdfReaderState extends State<TPdfReader> {
   bool isLoading = false;
   String? error;
   List<PdfSizedPage> sizedPages = [];
-  PdfDocument document = PdfDocument();
+  PdfBackgroundDocument document = PdfBackgroundDocument();
   final scrollController = ScrollController();
   final _transformationController = TransformationController();
 
@@ -57,12 +57,9 @@ class _TPdfReaderState extends State<TPdfReader> {
         error = null;
       });
 
-      document.openFile(widget.source, password: widget.password);
+      await document.openFile(widget.source, password: widget.password);
 
-      sizedPages = await PdfDocument.getPagesAsyncFileSpeedUp(
-        widget.source,
-        password: widget.password,
-      );
+      sizedPages = await document.getSizedPage();
       _calculateOffsets();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -87,10 +84,6 @@ class _TPdfReaderState extends State<TPdfReader> {
         isLoading = false;
       });
     } catch (e) {
-      // debugPrint('[TPdfReader:init]: $e');
-      widget.controller._pdfReaderEventStreamController.add(
-        PdfError('[TPdfReader:init]: $e'),
-      );
       error = e.toString();
       if (!mounted) return;
       setState(() {
@@ -109,10 +102,11 @@ class _TPdfReaderState extends State<TPdfReader> {
         child: Text(error!, style: TextStyle(color: Colors.red)),
       );
     }
-    return ListenableBuilder(
-      listenable: widget.controller,
-      builder: (context, child) => _listView,
-    );
+    // return ListenableBuilder(
+    //   listenable: widget.controller,
+    //   builder: (context, child) => _listView,
+    // );
+    return _listView;
   }
 
   Widget get _listView => Scrollbar(
@@ -155,18 +149,15 @@ class _TPdfReaderState extends State<TPdfReader> {
 
   Widget _pageItem(int index) {
     final sizedPage = sizedPages[index];
-    final page = PdfPage(domPtr: document.domPtr, pageIndex: index);
     return AnimatedOpacity(
       opacity: 1,
       duration: Duration(milliseconds: 1800),
       child: SizedBox(
         width: sizedPage.width,
         height: sizedPage.height,
-        child: PdfReaderPage(
-          path: widget.source,
-          index: index,
-          page: page,
+        child: TPdfRenderPageV2(
           sizedPage: sizedPage,
+          document: document,
           controller: widget.controller,
         ),
       ),

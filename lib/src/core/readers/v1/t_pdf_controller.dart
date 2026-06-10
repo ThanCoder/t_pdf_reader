@@ -5,7 +5,7 @@ class TPdfController extends ChangeNotifier {
   int _currentPage = 0;
   int _totalPages = 0;
   bool _isReady = false;
-  double _minScale = 1.0;
+  double _minScale = 0.3;
   double _maxScale = 4.0;
   bool _scaleEnabled = false;
   bool _panEnabled = false;

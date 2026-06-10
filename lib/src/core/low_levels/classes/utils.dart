@@ -1,13 +1,8 @@
-import 'dart:async';
-import 'dart:ffi';
-import 'dart:isolate';
-import 'dart:typed_data';
+part of 'pdf_document.dart';
 
-import 'package:image/image.dart' as img;
-import 'package:pdfium_dart/pdfium_dart.dart';
-import 'package:t_pdf_reader/src/core/low_levels/pdf_document.dart';
-import 'package:t_pdf_reader/src/core/low_levels/types.dart';
-
+/// get image
+///
+/// run in background
 Future<Uint8List?> getPdfImage(
   String pdfPath,
   int index, {
@@ -31,6 +26,9 @@ Future<Uint8List?> getPdfImage(
   return img.encodeJpg(image, quality: quality);
 }
 
+/// get raw image
+///
+/// run in background
 Future<Uint8List?> getPdfRawImage(
   String pdfPath,
   int index, {
@@ -50,7 +48,7 @@ Future<Uint8List?> getPdfRawImage(
       // Isolate သီးသန့် Document နဲ့ Page Pointer ကို ခဏဖွင့်ခြင်း
       dom = PdfDocument();
       dom.openFile(pdfPath); // သင့် Document လမ်းကြောင်း
-      pagePtr = pdf.FPDF_LoadPage(dom.domPtr, index);
+      pagePtr = pdf.FPDF_LoadPage(dom._domPtr, index);
 
       if (pagePtr == nullptr) return null;
 
@@ -102,7 +100,7 @@ Future<List<PdfSizedPage>> getPdfSizedPagesWithLowSizeImages(
       dom.openFile(pdfPath); // သင့် Document လမ်းကြောင်း
 
       for (var page in sizedPageList) {
-        pagePtr = pdf.FPDF_LoadPage(dom.domPtr, page.index);
+        pagePtr = pdf.FPDF_LoadPage(dom._domPtr, page.index);
         if (pagePtr == nullptr) return list;
 
         final width = (page.width * zoom).toInt();
@@ -138,5 +136,95 @@ Future<List<PdfSizedPage>> getPdfSizedPagesWithLowSizeImages(
       dom?.close();
       pdf.FPDF_DestroyLibrary();
     }
+  });
+}
+
+/// get sized page list
+///
+/// run in background
+Future<List<PdfSizedPage>> getPagesAsyncFile(
+  String path, {
+  String? password,
+}) async {
+  return await Isolate.run<List<PdfSizedPage>>(() {
+    final pdf = getPdfium();
+    pdf.FPDF_InitLibrary();
+
+    final dom = PdfDocument();
+    dom.openFile(path, password: password);
+    final count = dom.pageCount;
+
+    List<PdfSizedPage> list = [];
+    for (var i = 0; i < count; i++) {
+      // Object အသစ်တွေ ထပ်မဆောက်တော့ဘဲ native pointer ကို တိုက်ရိုက် load လုပ်ပါတယ်
+      final pagePtr = pdf.FPDF_LoadPage(dom._domPtr, i);
+
+      if (pagePtr != nullptr) {
+        final width = pdf.FPDF_GetPageWidth(pagePtr);
+        final height = pdf.FPDF_GetPageHeight(pagePtr);
+        list.add(PdfSizedPage(index: i, width: width, height: height));
+
+        pdf.FPDF_ClosePage(pagePtr); // သုံးပြီးတာနဲ့ ချက်ချင်းပိတ်
+      }
+    }
+    dom.close();
+
+    return list;
+  });
+}
+
+///
+/// ### run in background thread or isolate
+///
+/// run in background
+Future<List<PdfSizedPage>> getPagesAsyncFileSpeedUp(
+  String path, {
+  String? password,
+}) async {
+  return await Isolate.run<List<PdfSizedPage>>(() {
+    final pdf = getPdfium();
+    pdf.FPDF_InitLibrary();
+
+    final dom = PdfDocument();
+    dom.openFile(path, password: password);
+    final count = dom.pageCount;
+
+    // 🚀 မန်မိုရီ နေရာကို ကြိုသတ်မှတ်ထားခြင်းဖြင့် Array ဆွဲဆန့်ရတဲ့ Overhead ကို လျှော့ချပါတယ်
+    final List<PdfSizedPage> list = List<PdfSizedPage>.generate(
+      count,
+      (i) => PdfSizedPage(index: i, width: 0, height: 0), // Dummy init
+    );
+
+    // FPDF_GetPageSizeByIndex အတွက် double တန်ဖိုးလက်ခံမည့် Native Memory Pointer ကြိုဆောက်ခြင်း
+    final Pointer<Double> widthPtr = calloc<Double>();
+    final Pointer<Double> heightPtr = calloc<Double>();
+
+    try {
+      for (var i = 0; i < count; i++) {
+        // 🔥 Loaded Page မလိုတော့ဘူး! Index အလိုက် Size ကို တိုက်ရိုက် တောင်းပါတယ်
+        // ဒီကောင်က စာမျက်နှာ ၃ သန်းကို စက္ကန့်ပိုင်းအတွင်း တွက်ထုတ်ပေးနိုင်ပါတယ်
+        final int result = pdf.FPDF_GetPageSizeByIndex(
+          dom._domPtr,
+          i,
+          widthPtr,
+          heightPtr,
+        );
+
+        if (result != 0) {
+          list[i] = PdfSizedPage(
+            index: i,
+            width: widthPtr.value,
+            height: heightPtr.value,
+          );
+        }
+      }
+    } finally {
+      // Native Memory တွေကို သေချာ ပြန်ဖျက်ပေးရပါမယ် (Memory Leak ကာကွယ်ရန်)
+      calloc.free(widthPtr);
+      calloc.free(heightPtr);
+      dom.close();
+    }
+
+    return list;
   });
 }

@@ -1,33 +1,27 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:ffi';
-
-import 'package:flutter/foundation.dart';
-import 'package:image/image.dart' as img;
-import 'package:pdfium_dart/pdfium_dart.dart';
-import 'package:t_pdf_reader/src/core/low_levels/types.dart';
+part of 'pdf_document.dart';
 
 typedef PdfPageRenderImageErrorCallback = void Function(String error);
 
 class PdfPage {
   final _pdf = getPdfium();
-  final Pointer<fpdf_document_t__> domPtr;
-  int _pageIndex = -1;
+  final Pointer<fpdf_document_t__> _domPtr;
   Pointer<fpdf_page_t__> _page = nullptr;
   double _width = -1;
   double _height = -1;
+  int _pageIndex = -1;
   int get pageIndex => _pageIndex;
 
-  PdfPage({required this.domPtr, required this._pageIndex});
+  PdfPage({required this._domPtr, required this._pageIndex});
 
   void loadPage() {
-    _page = _pdf.FPDF_LoadPage(domPtr, pageIndex);
+    _page = _pdf.FPDF_LoadPage(_domPtr, pageIndex);
     _width = pageWidth;
     _height = pageHeight;
   }
 
   void loadPageIndex(int pageIndex) {
     _pageIndex = pageIndex;
-    _page = _pdf.FPDF_LoadPage(domPtr, pageIndex);
+    _page = _pdf.FPDF_LoadPage(_domPtr, pageIndex);
     _width = pageWidth;
     _height = pageHeight;
   }
@@ -49,26 +43,17 @@ class PdfPage {
     _pdf.FPDF_ClosePage(_page);
   }
 
-  // Future<Uint8List?> getPdfImage({
-  //   int quality = 100,
-  //   double zoom = 1.0,
-  //   PdfPageRenderImageErrorCallback? renderImageErrorCallback,
-  // }) async {
-  //   return await Future.microtask(() {
-  //     return getPdfImageAsync(
-  //       renderImageErrorCallback: renderImageErrorCallback,
-  //       quality: quality,
-  //       zoom: zoom,
-  //     );
-  //   });
-  // }
-
+  /// ### get image data
   Uint8List? getPdfImageAsync({
     int quality = 100,
     double zoom = 1.0,
+    int rotate = 0,
+    int flags = 0,
     PdfPageRenderImageErrorCallback? renderImageErrorCallback,
   }) {
     final rawImg = renderPageRawImage(
+      flags: flags,
+      rotate: rotate,
       zoom: zoom,
       renderImageErrorCallback: renderImageErrorCallback,
     );
@@ -82,12 +67,81 @@ class PdfPage {
     return img.encodeJpg(image, quality: quality);
   }
 
+  /// ### get zero copy type
+  TransferableTypedData? getPdfImageTransferableTypedDataAsync({
+    int quality = 100,
+    double zoom = 1.0,
+    int rotate = 0,
+    int flags = 0,
+    PdfPageRenderImageErrorCallback? renderImageErrorCallback,
+  }) {
+    Pointer<fpdf_bitmap_t__> bitmap = nullptr;
+    try {
+      // 🚀 ၂. Zoom အလိုက် ပုံထွက်လာမည့် Width နှင့် Height အမှန်ကို တွက်ချက်ခြင်း
+      final int renderedWidth = (pageWidth * zoom).toInt();
+      final int renderedHeight = (pageHeight * zoom).toInt();
+
+      bitmap = _pdf.FPDFBitmap_Create(renderedWidth, renderedHeight, 0);
+      if (bitmap == nullptr) {
+        throw Exception("Failed to create FPDFBitmap");
+      }
+      _pdf.FPDFBitmap_FillRect(
+        bitmap,
+        0,
+        0,
+        renderedWidth,
+        renderedHeight,
+        0xFFFFFFFF,
+      );
+
+      // ၃။ သင့်ရဲ့ Function ကို သုံးပြီး Bitmap ပေါ်ကို PDF Content တွေ Render လုပ်ပါမယ်
+      _pdf.FPDF_RenderPageBitmap(
+        bitmap,
+        _page,
+        0,
+        0,
+        renderedWidth,
+        renderedHeight,
+        rotate,
+        flags,
+      );
+      // 🚀 Pointer ကို ယူမယ် (Copy မကူးတော့ပါ)
+      final bufferPtr = _pdf.FPDFBitmap_GetBuffer(bitmap).cast<Uint8>();
+      final int stride = _pdf.FPDFBitmap_GetStride(bitmap);
+      final int bufferLength = stride * renderedHeight;
+
+      final nativeBytes = Uint8List.fromList(
+        bufferPtr.asTypedList(bufferLength),
+      );
+      // convert image
+      final image = img.Image.fromBytes(
+        width: (pageWidth * zoom).toInt(),
+        height: (pageHeight * zoom).toInt(),
+        bytes: nativeBytes.buffer,
+        order: img.ChannelOrder.bgra,
+      );
+      final imageBytes = img.encodeJpg(image, quality: quality);
+      //Zero copy
+      return TransferableTypedData.fromList([imageBytes]);
+    } catch (e) {
+      if (renderImageErrorCallback != null) {
+        renderImageErrorCallback.call(e.toString());
+      } else {
+        debugPrint('[PdfPage:renderPageImage] $e');
+      }
+      return null;
+    } finally {
+      if (bitmap != nullptr) {
+        _pdf.FPDFBitmap_Destroy(bitmap);
+      }
+    }
+  }
+
   /// You Need To Destory -> pointer
   PdfPageBitmapPointerResult? renderBigmapPointer({
     int rotate = 0,
     int flags = 0,
-    double zoom =
-        1.0, // 🚀 ၁. Zoom တန်ဖိုးကို Default 1.0 (100%) အဖြစ် လက်ခံမယ်
+    double zoom = 1.0,
     PdfPageRenderImageErrorCallback? renderImageErrorCallback,
   }) {
     Pointer<fpdf_bitmap_t__> bitmap = nullptr;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:t_pdf_reader_example/reader.dart';
+import 'package:t_pdf_reader_example/reader_v2.dart';
 import 'package:than_pkg/than_pkg.dart';
 
 void main() {
@@ -7,7 +8,13 @@ void main() {
   // Fullscreen ဖြစ်အောင် status bar နဲ့ navigation bar ကို ဖျောက်တာပါ
   // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-  runApp(MaterialApp(debugShowCheckedModeBanner: false, home: const MyApp()));
+  runApp(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: const MyApp(),
+      theme: ThemeData.dark(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -26,7 +33,7 @@ class MyApp extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        Reader(path: '/home/thancoder/Documents/test.pdf'),
+                        ReaderV2(path: '/home/thancoder/Documents/test.pdf'),
                   ),
                 );
               },
@@ -38,11 +45,23 @@ class MyApp extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        Reader(path: '/home/thancoder/Documents/test2.pdf'),
+                        ReaderV2(path: '/home/thancoder/Documents/test2.pdf'),
                   ),
                 );
               },
               child: Text('Big Pdf'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ReaderV2(path: '/home/thancoder/Documents/test3.pdf'),
+                  ),
+                );
+              },
+              child: Text('Very Big Pdf'),
             ),
             TextButton(
               onPressed: () {
