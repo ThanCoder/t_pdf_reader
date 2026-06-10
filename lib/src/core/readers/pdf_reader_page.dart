@@ -1,10 +1,4 @@
-import 'dart:typed_data';
-
-import 'package:flutter/material.dart';
-import 'package:t_pdf_reader/src/core/pdf_page.dart';
-import 'package:t_pdf_reader/src/core/types.dart';
-import 'package:t_pdf_reader/t_pdf_reader.dart';
-import 'package:visibility_detector/visibility_detector.dart';
+part of 't_pdf_reader_base.dart';
 
 class PdfReaderPage extends StatefulWidget {
   final String path;
@@ -38,26 +32,21 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
         isLoading = true;
         error = null;
       });
-      widget.page.loadPage();
-      imageBytes = widget.page.getPdfImage(
-        renderImageErrorCallback: (error) => setState(() {
-          this.error = error;
-        }),
-      );
-      // imageBytes = await getPdfImage(
-      //   widget.path,
-      //   widget.index,
-      //   width: widget.sizedPage.width.toInt(),
-      //   height: widget.sizedPage.height.toInt(),
-      // );
-
-      if (imageBytes != null) {
-        // 🚀 ၂။ အဓိက သော့ချက် - ရလာတဲ့ Bytes ကို UI မှာ မပြခင် Flutter Memory ထဲ ကြိုတင် Decode လုပ်ခိုင်းခြင်း
-        final imageProvider = MemoryImage(imageBytes!);
-        if (!mounted) return;
-        await precacheImage(imageProvider, context); // <--- ဒါလေး ခံပေးရပါမယ်
-      }
-
+      await Future.microtask(() async {
+        widget.page.loadPage();
+        imageBytes = widget.page.getPdfImageAsync(
+          renderImageErrorCallback: (error) => setState(() {
+            this.error = error;
+          }),
+        );
+        if (imageBytes != null) {
+          // 🚀 ၂။ အဓိက သော့ချက် - ရလာတဲ့ Bytes ကို UI မှာ မပြခင် Flutter Memory ထဲ ကြိုတင် Decode လုပ်ခိုင်းခြင်း
+          final imageProvider = MemoryImage(imageBytes!);
+          if (!mounted) return;
+          await precacheImage(imageProvider, context); // <--- ဒါလေး ခံပေးရပါမယ်
+          // ok မှ image ထဲကို ထည့်မယ်
+        }
+      });
       if (!mounted) return;
       setState(() {
         isLoading = false;
@@ -68,8 +57,6 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
       setState(() {
         isLoading = false;
       });
-    } finally {
-      widget.page.close();
     }
   }
 
@@ -83,6 +70,7 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
   @override
   void dispose() {
     imageBytes = null;
+    widget.page.close();
     super.dispose();
   }
 
@@ -94,7 +82,13 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
       onVisibilityChanged: (info) {
         // visibleFraction > 0 ဆိုတာ မျက်နှာပြင်ပေါ်မှာ စာမျက်နှာစပေါ်လာပြီလို့ ပြောတာပါ
         isVisible = info.visibleFraction > 0;
-        widget.controller.updateCurrentPage(widget.index + 1);
+        widget.controller._currentPage = widget.page.pageIndex + 1;
+
+        if (!widget.controller._pdfReaderEventStreamController.isClosed) {
+          widget.controller._pdfReaderEventStreamController.add(
+            PdfPageChanged(widget.controller._currentPage),
+          );
+        }
         renderImage();
       },
       child: // 🚀 ဒီနေရာမှာ အိအိလေး ကူးပြောင်းသွားအောင် Animation အုပ်လိုက်တာပါ
@@ -129,16 +123,6 @@ class _PdfReaderPageState extends State<PdfReaderPage> {
         key: ValueKey('real-image-${widget.index}'),
       );
     }
-    // if (widget.sizedPage.lowBytes != null) {
-    //   return Image.memory(
-    //     widget.sizedPage.lowBytes!,
-    //     fit: BoxFit.fill,
-    //     width: widget.sizedPage.width,
-    //     height: widget.sizedPage.height,
-    //     filterQuality: FilterQuality.low,
-    //     key: ValueKey('placeholder-low-image-${widget.index}'),
-    //   );
-    // }
 
     return Text(
       'Page ${widget.index + 1}',

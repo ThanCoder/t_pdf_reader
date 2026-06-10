@@ -24,19 +24,31 @@ class _ReaderState extends State<Reader> {
   @override
   void dispose() {
     ThanPkg.platform.toggleFullScreen(isFullScreen: false);
+    pdfController.dispose();
     super.dispose();
   }
 
   void init() {
-    pdfController.onLoaded((totalPage, loadedElapsedTime) {
-      print('Pdf Loaded Time: ${loadedElapsedTime.inMilliseconds} ms');
-      pdfController.jumpToPage(10);
-      pdfController.setZoom(1.25);
+    pdfController.pdfReaderEvent.listen((event) {
+      if (event is PdfOnLoaded) {
+        print('Pdf Loaded Time: ${event.loadedElapsedTime.inMilliseconds} ms');
+        // pdfController.jumpToPage(10);
+        pdfController.setZoom(1.25);
+
+        showTSnackBar(
+          context,
+          "Loaded Time: ${event.loadedElapsedTime.getAutoTimeLabel()}",
+          showCloseIcon: true,
+        );
+      }
+      if (event is PdfScreenSizeChanged) {
+        print('size changed-maxWidth: ${event.maxWidth}');
+      }
     });
   }
 
   final pdfController = TPdfController();
-  bool isDarkMode = false;
+  bool isDarkMode = true;
   bool isScaleEnable = false;
   bool isFullscreen = false;
 
@@ -86,91 +98,85 @@ class _ReaderState extends State<Reader> {
     );
   }
 
-  Widget get _header => ListenableBuilder(
-    listenable: pdfController,
-    builder: (context, child) {
-      return Theme(
-        data: isDarkMode ? ThemeData.dark() : ThemeData.light(),
-        child: Column(
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                spacing: 6,
-                children: [
-                  SizedBox(width: 10),
-                  InkWell(
-                    mouseCursor: SystemMouseCursors.click,
-                    onTap: _showGoToPageDialog,
-                    child: Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Text(
+  Widget get _header => Theme(
+    data: isDarkMode ? ThemeData.dark() : ThemeData.light(),
+    child: Column(
+      children: [
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            spacing: 6,
+            children: [
+              SizedBox(width: 10),
+              InkWell(
+                mouseCursor: SystemMouseCursors.click,
+                onTap: _showGoToPageDialog,
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: StreamBuilder(
+                    stream: pdfController.onPageChanged,
+                    builder: (context, asyncSnapshot) {
+                      return Text(
                         '${pdfController.currentPage}/${pdfController.totalPages}',
                         style: TextStyle(color: Colors.teal),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        isDarkMode = !isDarkMode;
-                      });
-                    },
-                    icon: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
-                  ),
-                  Text('Zoom: ${(pdfController.currentZoom * 100).toInt()}%'),
-                  IconButton(
-                    icon: Icon(Icons.zoom_out),
-                    onPressed: () => pdfController.setZoom(
-                      pdfController.currentZoom - 0.25,
-                    ), // ၂၅% လျှော့မယ်
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.zoom_in),
-                    onPressed: () => pdfController.setZoom(
-                      pdfController.currentZoom + 0.25,
-                    ), // ၂၅% တိုးမယ်
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      isFullscreen = !isFullscreen;
-                      ThanPkg.platform.toggleFullScreen(
-                        isFullScreen: isFullscreen,
                       );
-                      setState(() {});
                     },
-                    icon: Icon(
-                      isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-                    ),
                   ),
-                  IconButton(
-                    onPressed: () {
-                      isScaleEnable = !isScaleEnable;
-                      pdfController.setPanEnabled(isScaleEnable);
-                      if (Platform.isAndroid) {
-                        pdfController.setScaleEnabled(isScaleEnable);
-                      }
-                    },
-                    icon: Icon(isScaleEnable ? Icons.lock_open : Icons.lock),
-                  ),
-                ],
+                ),
               ),
-            ),
-            StreamBuilder(
-              stream: pdfController.lowImageProgressStream.stream,
-              builder: (context, snapshot) {
-                double? value;
-                if (snapshot.hasData) {
-                  value = snapshot.data!.$2 / snapshot.data!.$1;
-                }
-                if (value == null || value == 1.0) return SizedBox.shrink();
-                return LinearProgressIndicator(value: value);
-              },
-            ),
-          ],
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    isDarkMode = !isDarkMode;
+                  });
+                },
+                icon: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
+              ),
+              StreamBuilder(
+                stream: pdfController.onZoomChanged,
+                builder: (context, asyncSnapshot) {
+                  return Text(
+                    'Zoom: ${(pdfController.currentZoom * 100).toInt()}%',
+                  );
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.zoom_out),
+                onPressed: () => pdfController.setZoom(
+                  pdfController.currentZoom - 0.25,
+                ), // ၂၅% လျှော့မယ်
+              ),
+              IconButton(
+                icon: Icon(Icons.zoom_in),
+                onPressed: () => pdfController.setZoom(
+                  pdfController.currentZoom + 0.25,
+                ), // ၂၅% တိုးမယ်
+              ),
+              IconButton(
+                onPressed: () {
+                  isFullscreen = !isFullscreen;
+                  ThanPkg.platform.toggleFullScreen(isFullScreen: isFullscreen);
+                  setState(() {});
+                },
+                icon: Icon(
+                  isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  isScaleEnable = !isScaleEnable;
+                  pdfController.setPanEnabled(isScaleEnable);
+                  if (Platform.isAndroid) {
+                    pdfController.setScaleEnabled(isScaleEnable);
+                  }
+                },
+                icon: Icon(isScaleEnable ? Icons.lock_open : Icons.lock),
+              ),
+            ],
+          ),
         ),
-      );
-    },
+      ],
+    ),
   );
 
   void _showGoToPageDialog() {
@@ -194,19 +200,3 @@ class _ReaderState extends State<Reader> {
     );
   }
 }
-
-/**
- * 
- StreamBuilder(
-                stream: pdfController.lowImageProgressStream.stream,
-                builder: (context, snapshot) {
-                  double? value;
-                  if (snapshot.hasData) {
-                    value = snapshot.data!.$2 / snapshot.data!.$1;
-                  }
-                  return LinearProgressIndicator(value: value);
-                },
-              ),
-
-             
- */

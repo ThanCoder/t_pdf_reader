@@ -6,10 +6,8 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import 'package:pdfium_dart/pdfium_dart.dart';
 
-import 'package:t_pdf_reader/src/core/pdf_page.dart';
-import 'package:t_pdf_reader/src/core/types.dart';
-
-
+import 'package:t_pdf_reader/src/core/low_levels/pdf_page.dart';
+import 'package:t_pdf_reader/src/core/low_levels/types.dart';
 
 typedef PdfOpenErrorCallback = void Function(String error);
 
@@ -81,7 +79,7 @@ class PdfDocument {
   }) {
     final page = PdfPage(domPtr: domPtr, pageIndex: pageIndex);
     page.loadPage();
-    return page.getPdfImage(
+    return page.getPdfImageAsync(
       quality: quality,
       zoom: zoom,
       renderImageErrorCallback: renderImageErrorCallback,
@@ -130,6 +128,9 @@ class PdfDocument {
     });
   }
 
+  ///
+  /// ### run in background thread or isolate
+  ///
   static Future<List<PdfSizedPage>> getPagesAsyncFileSpeedUp(
     String path, {
     String? password,

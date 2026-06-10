@@ -1,13 +1,15 @@
 import 'dart:async';
-import 'dart:isolate';
+import 'dart:typed_data';
 
-import 'package:dart_core_extensions/dart_core_extensions.dart';
 import 'package:flutter/material.dart';
-import 'package:t_pdf_reader/src/core/pdf_document.dart';
-import 'package:t_pdf_reader/src/core/pdf_page.dart';
-import 'package:t_pdf_reader/src/core/pdf_reader_page.dart';
-import 'package:t_pdf_reader/src/core/t_pdf_controller.dart';
-import 'package:t_pdf_reader/src/core/types.dart';
+import 'package:t_pdf_reader/src/core/low_levels/pdf_document.dart';
+import 'package:t_pdf_reader/src/core/low_levels/pdf_page.dart';
+import 'package:t_pdf_reader/src/core/low_levels/types.dart';
+import 'package:t_pdf_reader/t_pdf_reader.dart';
+import 'package:visibility_detector/visibility_detector.dart';
+
+part 't_pdf_controller.dart';
+part 'pdf_reader_page.dart';
 
 class TPdfReader extends StatefulWidget {
   final String source;
@@ -28,7 +30,6 @@ class _TPdfReaderState extends State<TPdfReader> {
   @override
   void initState() {
     super.initState();
-    widget.controller.attachTransformationController(_transformationController);
     init();
   }
 
@@ -37,10 +38,16 @@ class _TPdfReaderState extends State<TPdfReader> {
     document.close();
     scrollController.dispose();
     _transformationController.dispose();
-    lowImageIsolate?.kill(priority: Isolate.immediate);
-    lowImageIsolate = null;
+    widget.controller._detachReader();
     super.dispose();
   }
+
+  bool isLoading = false;
+  String? error;
+  List<PdfSizedPage> sizedPages = [];
+  PdfDocument document = PdfDocument();
+  final scrollController = ScrollController();
+  final _transformationController = TransformationController();
 
   Future<void> init() async {
     try {
@@ -57,36 +64,22 @@ class _TPdfReaderState extends State<TPdfReader> {
         password: widget.password,
       );
       _calculateOffsets();
-      // low bytes ရယူမယ်
-      _addLowImageBytesStream();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         timer.stop();
 
-        widget.controller.attachReader(
+        widget.controller._attachReader(
           loadedElapsedTime: timer.elapsed,
           totalPage: sizedPages.length + 1,
-          jumpToPageClosure: (page) {
-            _jumpToPageInternal(page - 1);
-          },
-          zoomToPageCallback: (zoom) {
-            // 🚀 ၁။ Screen ရဲ့ အကျယ်နဲ့ အမြင့် အလယ်ဗဟို (Center Offset) ကို ရှာခြင်း
-            double centerX = 0.0;
-            double centerY = 0.0;
-
-            final screenSize = MediaQuery.of(context).size;
-            centerX = screenSize.width / 2;
-            centerY = screenSize.height / 2;
-
-            // 🚀 ၂။ Center ကို ဗဟိုပြုပြီး ဇူးမ်ချဲ့မည့် Matrix4 သင်္ချာ ပုံသေနည်း
-            final matrix = Matrix4.identity()
-              ..translate(centerX, centerY) // ပြကွက်အလယ်ကို Pointer ရွှေ့မယ်
-              ..scale(zoom) // ချဲ့မယ်
-              ..translate(-centerX, -centerY); // မူလအနေအထား ပြန်ညှိမယ်
-
-            _transformationController.value = matrix;
-          },
         );
+      });
+      widget.controller._userEvent.listen((event) {
+        if (event is UserJumpToPage) {
+          _jumpToPageInternal(event.page - 1);
+        }
+        if (event is UserZoom) {
+          _setZoom(event.zoom);
+        }
       });
 
       if (!mounted) return;
@@ -95,6 +88,9 @@ class _TPdfReaderState extends State<TPdfReader> {
       });
     } catch (e) {
       // debugPrint('[TPdfReader:init]: $e');
+      widget.controller._pdfReaderEventStreamController.add(
+        PdfError('[TPdfReader:init]: $e'),
+      );
       error = e.toString();
       if (!mounted) return;
       setState(() {
@@ -102,13 +98,6 @@ class _TPdfReaderState extends State<TPdfReader> {
       });
     }
   }
-
-  bool isLoading = false;
-  String? error;
-  List<PdfSizedPage> sizedPages = [];
-  PdfDocument document = PdfDocument();
-  final scrollController = ScrollController();
-  final _transformationController = TransformationController();
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +122,9 @@ class _TPdfReaderState extends State<TPdfReader> {
     interactive: true,
     child: LayoutBuilder(
       builder: (context, constraints) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _centerNativeView(constraints.maxWidth);
+        });
         return InteractiveViewer(
           constrained: false,
           transformationController: _transformationController,
@@ -201,25 +193,49 @@ class _TPdfReaderState extends State<TPdfReader> {
       final targetOffset = pageOffsetsCache[index];
       scrollController.jumpTo(targetOffset);
     }
+    widget.controller._currentPage = index + 1;
+    widget.controller._notifyListeners();
   }
 
-  Isolate? lowImageIsolate;
+  double get _currentZoom => _transformationController.value.row0.r;
 
-  /// Low image bytes တွေကို Stream နဲ့ တဖြည်းဖြည်းချင်း တွက်ပြီး ထည့်သွားမည့် Function
-  Future<void> _addLowImageBytesStream() async {
-    // await getPdfSizedPagesWithLowSizeImagesInBackgound(
-    //   widget.source,
-    //   sizedPageList: sizedPages,
-    //   onBackgroundStartRunning: (isolate) {
-    //     lowImageIsolate = isolate;
-    //   },
-    //   progressStream: widget.controller.lowImageProgressStream,
-    // );
-    // sizedPages = await getPdfSizedPagesWithLowSizeImages(
-    //   widget.source,
-    //   sizedPageList: sizedPages,
-    // );
-    // setState(() {});
-    // print('loaded low image');
+  void _setZoom(double zoom) {
+    // 🚀 ၁။ Screen ရဲ့ အကျယ်နဲ့ အမြင့် အလယ်ဗဟို (Center Offset) ကို ရှာခြင်း
+    double centerX = 0.0;
+    double centerY = 0.0;
+
+    final screenSize = MediaQuery.of(context).size;
+    centerX = screenSize.width / 2;
+    centerY = screenSize.height / 2;
+
+    // 🚀 ၂။ Center ကို ဗဟိုပြုပြီး ဇူးမ်ချဲ့မည့် Matrix4 သင်္ချာ ပုံသေနည်း
+    final matrix = Matrix4.identity()
+      // ignore: deprecated_member_use
+      ..translate(centerX, centerY) // ပြကွက်အလယ်ကို Pointer ရွှေ့မယ်
+      // ignore: deprecated_member_use
+      ..scale(zoom) // ချဲ့မယ်
+      // ignore: deprecated_member_use
+      ..translate(-centerX, -centerY); // မူလအနေအထား ပြန်ညှိမယ်
+
+    _transformationController.value = matrix;
+    widget.controller._currentZoom = zoom;
+    if (!widget.controller._pdfReaderEventStreamController.isClosed) {
+      widget.controller._pdfReaderEventStreamController.add(
+        PdfZoomChanged(zoom),
+      );
+    }
+  }
+
+  void _centerNativeView(double maxWidth) {
+    if (!mounted) return;
+    _setZoom(_currentZoom);
+    if (widget.controller._isReady) {
+      // send pdf event
+      if (!widget.controller._pdfReaderEventStreamController.isClosed) {
+        widget.controller._pdfReaderEventStreamController.add(
+          PdfScreenSizeChanged(_currentZoom, maxWidth),
+        );
+      }
+    }
   }
 }
