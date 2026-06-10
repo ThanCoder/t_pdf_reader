@@ -8,6 +8,7 @@ void _pdfBackgroundWorker((SendPort, String, String?) args) async {
 
   final pdf = getPdfium();
   pdf.FPDF_InitLibrary();
+  // ignore: unused_local_variable
   String? openError;
 
   final dom = PdfDocument();
