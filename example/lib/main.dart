@@ -12,7 +12,7 @@ void main() {
     MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const MyApp(),
-      theme: ThemeData.dark(),
+      // theme: ThemeData.dark(),
     ),
   );
 }
@@ -27,6 +27,19 @@ class MyApp extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReaderV2(
+                      path: '/home/thancoder/Documents/10-pg-blank.pdf',
+                    ),
+                  ),
+                );
+              },
+              child: Text('So Small Pdf'),
+            ),
             TextButton(
               onPressed: () {
                 Navigator.push(

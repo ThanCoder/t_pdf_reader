@@ -1,6 +1,6 @@
-part of 't_pdf_reader_v2_base.dart';
+part of 't_pdf_render_v3_base.dart';
 
-class TPdfControllerV2 extends ChangeNotifier {
+class TPdfControllerV3 extends ChangeNotifier {
   // Internal State (Reader ဘက်ကနေ လာပြီး အပ်ဒိတ်လုပ်မယ့် တန်ဖိုးများ)
   int _currentPage = 0;
   int _totalPages = 0;
@@ -12,7 +12,7 @@ class TPdfControllerV2 extends ChangeNotifier {
   PanAxis _panAxis = PanAxis.free;
   double _currentZoom = 1.0;
 
-  TPdfControllerV2({
+  TPdfControllerV3({
     this._currentPage = 0,
     this._minScale = 0.3,
     this._maxScale = 4.0,

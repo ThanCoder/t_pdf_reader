@@ -2,10 +2,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:t_pdf_reader/src/core/events/pdf_reader_event.dart';
-import 'package:t_pdf_reader/src/core/events/user_event.dart';
 import 'package:t_pdf_reader/src/core/low_levels/backgrounds/pdf_background_document.dart';
 import 'package:t_pdf_reader/src/core/low_levels/classes/types.dart';
+import 'package:t_pdf_reader/t_pdf_reader.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 part 't_pdf_controller_v2.dart';
@@ -60,7 +59,6 @@ class _TPdfReaderV2State extends State<TPdfReaderV2> {
       await document.openFile(widget.source, password: widget.password);
 
       sizedPages = await document.getSizedPage();
-      _calculateOffsets();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         timer.stop();
@@ -102,10 +100,6 @@ class _TPdfReaderV2State extends State<TPdfReaderV2> {
         child: Text(error!, style: TextStyle(color: Colors.red)),
       );
     }
-    // return ListenableBuilder(
-    //   listenable: widget.controller,
-    //   builder: (context, child) => _listView,
-    // );
     return _listView;
   }
 
@@ -116,6 +110,9 @@ class _TPdfReaderV2State extends State<TPdfReaderV2> {
     interactive: true,
     child: LayoutBuilder(
       builder: (context, constraints) {
+        // offset ပြန်တွက်မယ်
+        _calculateOffsets(constraints.maxWidth);
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _centerNativeView(constraints.maxWidth);
         });
@@ -137,7 +134,10 @@ class _TPdfReaderV2State extends State<TPdfReaderV2> {
               controller: scrollController,
               itemExtentBuilder: (index, dimensions) {
                 final page = sizedPages[index];
-                return page.height * 0.5;
+                final aspectRatio = page.width / page.height;
+                final pageHeight = constraints.maxWidth / aspectRatio;
+                // return page.height * 0.5;
+                return pageHeight;
               },
               itemBuilder: (context, index) => _pageItem(index),
             ),
@@ -149,12 +149,10 @@ class _TPdfReaderV2State extends State<TPdfReaderV2> {
 
   Widget _pageItem(int index) {
     final sizedPage = sizedPages[index];
-    return AnimatedOpacity(
-      opacity: 1,
-      duration: Duration(milliseconds: 1800),
-      child: SizedBox(
-        width: sizedPage.width,
-        height: sizedPage.height,
+    return AspectRatio(
+      aspectRatio: sizedPage.width / sizedPage.height,
+      child: Container(
+        decoration: BoxDecoration(border: Border.all(color: Colors.orange)),
         child: TPdfRenderPageV2(
           sizedPage: sizedPage,
           document: document,
@@ -168,14 +166,17 @@ class _TPdfReaderV2State extends State<TPdfReaderV2> {
   List<double> pageOffsetsCache = [];
 
   // ၂။ PDF စဖွင့်ပြီး sizedPages တွေ ရလာကတည်းက ဒါကို တစ်ခါပဲ ကြိုတွက်ခိုင်းထားပါ
-  void _calculateOffsets() {
+  void _calculateOffsets(double maxWidth) {
     double currentOffset = 0.0;
     pageOffsetsCache = [];
 
     for (var page in sizedPages) {
       pageOffsetsCache.add(currentOffset);
-      currentOffset +=
-          page.height * 0.5; // စာမျက်နှာအမြင့်တွေကို တန်းစီပေါင်းသွားခြင်း
+      final ratio = page.width / page.height;
+      // တစ်ကယ့် height
+      final pageHeight = maxWidth / ratio;
+
+      currentOffset += pageHeight;
     }
   }
 

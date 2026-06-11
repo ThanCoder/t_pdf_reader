@@ -1,5 +1,6 @@
 import 'dart:isolate';
 
+import 'package:flutter/widgets.dart';
 import 'package:pdfium_dart/pdfium_dart.dart';
 import 'package:t_pdf_reader/src/core/low_levels/backgrounds/background_types.dart';
 import 'package:t_pdf_reader/src/core/low_levels/classes/pdf_document.dart';
@@ -35,23 +36,28 @@ class PdfBackgroundDocument {
 
   Future<TransferableTypedData?> getPageImage(int pageIndex) async {
     if (_isolateSendPort == null) throw Exception('Need To Initilize');
-    final receivePort = ReceivePort();
+    try {
+      final receivePort = ReceivePort();
 
-    _isolateSendPort?.send(
-      SendPdfBackgroundWorkerSender(
-        command: .getImage,
-        replySendPort: receivePort.sendPort,
-        extraMap: {'pageIndex': pageIndex},
-      ).toMap(),
-    );
-    final map = await receivePort.first as Map<String, dynamic>;
-    final result = PdfBackgroundWorkerResult<TransferableTypedData>.fromMap(
-      map,
-    );
-    if (result.isError) {
+      _isolateSendPort?.send(
+        SendPdfBackgroundWorkerSender(
+          command: .getImage,
+          replySendPort: receivePort.sendPort,
+          extraMap: {'pageIndex': pageIndex},
+        ).toMap(),
+      );
+      final map = await receivePort.first as Map<String, dynamic>;
+      final result = PdfBackgroundWorkerResult<TransferableTypedData>.fromMap(
+        map,
+      );
+      if (result.isError) {
+        return null;
+      }
+      return result.result;
+    } catch (e) {
+      debugPrint('[PdfBackgroundDocument:getPageImage]: $e');
       return null;
     }
-    return result.result;
   }
 
   void close() {

@@ -83,14 +83,10 @@ class _TPdfRenderPageV2State extends State<TPdfRenderPageV2> {
         renderImage();
       },
       child: // 🚀 ဒီနေရာမှာ အိအိလေး ကူးပြောင်းသွားအောင် Animation အုပ်လိုက်တာပါ
-      Center(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          switchInCurve: Curves.easeIn, // ဝင်လာရင် သုံးမည့် ပုံသဏ္ဍာန် Curve
-          switchOutCurve:
-              Curves.easeOut, // ထွက်သွားရင် သုံးမည့် ပုံသဏ္ဍာန် Curve
-          child: _imageWidget,
-        ),
+      AnimatedOpacity(
+        duration: const Duration(milliseconds: 800),
+        opacity: 1,
+        child: Center(child: _imageWidget),
       ),
     );
   }

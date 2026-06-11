@@ -28,10 +28,10 @@ class _ReaderV2State extends State<ReaderV2> {
     super.dispose();
   }
 
-  bool isDarkMode = true;
+  bool isDarkMode = false;
   bool isScaleEnable = false;
   bool isFullscreen = false;
-  final pdfController = TPdfControllerV2();
+  final pdfController = TPdfControllerV3();
 
   void init() {
     pdfController.pdfReaderEvent.listen((event) {
@@ -81,7 +81,7 @@ class _ReaderV2State extends State<ReaderV2> {
                       color: Colors.white,
                       width: double.infinity,
                       height: double.infinity,
-                      child: TPdfReaderV2(
+                      child: TPdfReaderV3(
                         source: widget.path,
                         controller: pdfController,
                       ),

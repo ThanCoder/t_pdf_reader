@@ -25,7 +25,7 @@ enum PdfWorkerCommandType {
 class PdfBackgroundWorkerResult<T> {
   final bool isError;
   final String? message;
-  final T result;
+  final T? result;
   const PdfBackgroundWorkerResult({
     required this.isError,
     this.message,
@@ -44,7 +44,7 @@ class PdfBackgroundWorkerResult<T> {
     return PdfBackgroundWorkerResult<T>(
       isError: map['isError'] as bool,
       message: map['message'] != null ? map['message'] as String : null,
-      result: map['result'] as T,
+      result: map['result'] != null ? map['result'] as T : null,
     );
   }
 }

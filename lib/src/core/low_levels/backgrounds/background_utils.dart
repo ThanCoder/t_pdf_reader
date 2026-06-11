@@ -26,15 +26,7 @@ void _pdfBackgroundWorker((SendPort, String, String?) args) async {
       final sender = SendPdfBackgroundWorkerSender.fromMap(
         message as Map<String, dynamic>,
       );
-      // if (openError != null || sender.command != .closeWorker) {
-      //   sender.replySendPort?.send(
-      //     PdfBackgroundWorkerResult<String>(
-      //       isError: false,
-      //       result: openError!,
-      //     ).toMap(),
-      //   );
-      //   return;
-      // }
+
       if (sender.command == .getImage) {
         final pageIndex = message['pageIndex'] ?? 0;
         final quality = message['quality'] ?? 100;
@@ -42,15 +34,6 @@ void _pdfBackgroundWorker((SendPort, String, String?) args) async {
 
         final data = page.getPdfImageTransferableTypedDataAsync(
           quality: quality,
-          renderImageErrorCallback: (error) {
-            sender.replySendPort?.send(
-              PdfBackgroundWorkerResult(
-                isError: true,
-                result: null,
-                message: error,
-              ).toMap(),
-            );
-          },
         );
 
         if (data != null) {
