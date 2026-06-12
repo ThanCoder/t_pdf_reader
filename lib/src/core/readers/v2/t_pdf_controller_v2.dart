@@ -54,7 +54,11 @@ class TPdfControllerV2 extends ChangeNotifier {
     // _onLoadedPdfCallback?.call(_totalPages, loadedElapsedTime);
     if (!_pdfReaderEventStreamController.isClosed) {
       _pdfReaderEventStreamController.add(
-        PdfOnLoaded(totalPage: totalPage, loadedElapsedTime: loadedElapsedTime),
+        PdfOnLoaded(
+          totalPage: totalPage,
+          page: 1,
+          loadedElapsedTime: loadedElapsedTime,
+        ),
       );
       _pdfReaderEventStreamController.add(PdfPageChanged(1));
     }

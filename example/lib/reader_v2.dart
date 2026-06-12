@@ -37,8 +37,8 @@ class _ReaderV2State extends State<ReaderV2> {
     pdfController.pdfReaderEvent.listen((event) {
       if (event is PdfOnLoaded) {
         print('Pdf Loaded Time: ${event.loadedElapsedTime.inMilliseconds} ms');
-        // pdfController.jumpToPage(10);
-        pdfController.setZoom(1.25);
+        pdfController.jumpToPage(10);
+        // pdfController.setZoom(1.25);
 
         showTSnackBar(
           context,

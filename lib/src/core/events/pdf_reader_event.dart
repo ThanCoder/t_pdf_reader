@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 sealed class PdfReaderEvent {}
 
 class PdfScreenSizeChanged extends PdfReaderEvent {
@@ -6,10 +7,20 @@ class PdfScreenSizeChanged extends PdfReaderEvent {
   PdfScreenSizeChanged(this.zoom, this.maxWidth);
 }
 
+class PdfViwerOnAttached extends PdfReaderEvent {
+  final int totalPage;
+  PdfViwerOnAttached({required this.totalPage});
+}
+
 class PdfOnLoaded extends PdfReaderEvent {
+  final int page;
   final int totalPage;
   final Duration loadedElapsedTime;
-  PdfOnLoaded({required this.totalPage, required this.loadedElapsedTime});
+  PdfOnLoaded({
+    required this.page,
+    required this.totalPage,
+    required this.loadedElapsedTime,
+  });
 }
 
 class PdfPageChanged extends PdfReaderEvent {
@@ -25,4 +36,15 @@ class PdfZoomChanged extends PdfReaderEvent {
 class PdfError extends PdfReaderEvent {
   final String error;
   PdfError(this.error);
+}
+
+class PdfCacheChanged extends PdfReaderEvent {
+  final int length;
+  final int size;
+  PdfCacheChanged({required this.length, required this.size});
+}
+
+class PdfVisiablePageChanged extends PdfReaderEvent {
+  final Map<int, bool> map;
+  PdfVisiablePageChanged({required this.map});
 }

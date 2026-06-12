@@ -4,19 +4,18 @@ enum PdfWorkerCommandType {
   openDocument,
   closeWorker,
   getImage,
+  getRgbaImage,
   none;
+
+  static PdfWorkerCommandType getMapType(Map<String, dynamic> map) {
+    final name = map['command'] ?? '';
+    return getStringType(name);
+  }
 
   static PdfWorkerCommandType getStringType(String name) {
     if (name == closeWorker.name) return closeWorker;
     if (name == getImage.name) return getImage;
-    if (name == openDocument.name) return openDocument;
-    return none;
-  }
-
-  static PdfWorkerCommandType getMapType(Map<String, dynamic> map) {
-    final name = map['command'] ?? '';
-    if (name == closeWorker.name) return closeWorker;
-    if (name == getImage.name) return getImage;
+    if (name == getRgbaImage.name) return getRgbaImage;
     if (name == openDocument.name) return openDocument;
     return none;
   }

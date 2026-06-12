@@ -5,8 +5,6 @@ import 'package:than_pkg/than_pkg.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Fullscreen ဖြစ်အောင် status bar နဲ့ navigation bar ကို ဖျောက်တာပါ
-  // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   runApp(
     MaterialApp(

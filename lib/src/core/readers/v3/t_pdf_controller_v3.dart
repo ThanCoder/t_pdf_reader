@@ -1,5 +1,7 @@
 part of 't_pdf_render_v3_base.dart';
 
+typedef CustomScrollBar = TCustomScrollbarWidget Function(BuildContext context);
+
 class TPdfControllerV3 extends ChangeNotifier {
   // Internal State (Reader ဘက်ကနေ လာပြီး အပ်ဒိတ်လုပ်မယ့် တန်ဖိုးများ)
   int _currentPage = 0;
@@ -11,8 +13,11 @@ class TPdfControllerV3 extends ChangeNotifier {
   bool _panEnabled = false;
   PanAxis _panAxis = PanAxis.free;
   double _currentZoom = 1.0;
+  final double _loadCacheLength;
+  final CustomScrollBar? _customScrollbar;
 
   TPdfControllerV3({
+    this._customScrollbar,
     this._currentPage = 0,
     this._minScale = 0.3,
     this._maxScale = 4.0,
@@ -20,6 +25,7 @@ class TPdfControllerV3 extends ChangeNotifier {
     this._panAxis = PanAxis.free,
     this._panEnabled = false,
     this._currentZoom = 1.0,
+    this._loadCacheLength = 10,
   });
 
   int get currentPage => _currentPage;
@@ -31,6 +37,9 @@ class TPdfControllerV3 extends ChangeNotifier {
   bool get panEnabled => _panEnabled;
   PanAxis get panAxis => _panAxis;
   double get currentZoom => _currentZoom;
+  double get loadCacheLength => _loadCacheLength;
+  // stop wathc
+  final _stopWatch = Stopwatch();
 
   // *****************Event ********************
   @protected
@@ -44,17 +53,13 @@ class TPdfControllerV3 extends ChangeNotifier {
   Stream<PdfReaderEvent> get pdfReaderEvent =>
       _pdfReaderEventStreamController.stream;
 
-  void _attachReader({
-    required Duration loadedElapsedTime,
-    required int totalPage,
-  }) {
+  void _attachReader({required int totalPage}) {
     _totalPages = totalPage;
     _isReady = true;
     notifyListeners();
-    // _onLoadedPdfCallback?.call(_totalPages, loadedElapsedTime);
     if (!_pdfReaderEventStreamController.isClosed) {
       _pdfReaderEventStreamController.add(
-        PdfOnLoaded(totalPage: totalPage, loadedElapsedTime: loadedElapsedTime),
+        PdfViwerOnAttached(totalPage: totalPage),
       );
       _pdfReaderEventStreamController.add(PdfPageChanged(1));
     }
@@ -78,9 +83,9 @@ class TPdfControllerV3 extends ChangeNotifier {
   Stream<PdfZoomChanged> get onZoomChanged =>
       pdfReaderEvent.where((e) => e is PdfZoomChanged).cast<PdfZoomChanged>();
 
-  void _notifyListeners() {
-    notifyListeners();
-  }
+  // void _notifyListeners() {
+  //   notifyListeners();
+  // }
 
   void jumpToPage(int page) =>
       _userEventStreamController.add(UserJumpToPage(page));

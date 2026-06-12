@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 part of 't_pdf_render_v3_base.dart';
 
 class TCustomPdfViewer extends StatefulWidget {
@@ -15,18 +16,26 @@ class TCustomPdfViewer extends StatefulWidget {
   State<TCustomPdfViewer> createState() => _TCustomPdfViewerState();
 }
 
+class _PageRange {
+  final int index;
+  final double start;
+  final double end;
+  const _PageRange({
+    required this.index,
+    required this.start,
+    required this.end,
+  });
+}
+
 class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
   double _startScrollY = 0.0;
-  List<double> _pageOffsets = [];
+  List<_PageRange> _pageOffsetRanges = [];
   double _totalHeight = 0.0;
-  double _spacing = 12;
-  double _paddingWidth = 40;
-
+  // double _spacing = 0;
   /// ************* Cache Variables *************
-  int _currentPageIndex = 0;
-  final int _bufferSize = 10;
   final Map<int, Uint8List?> _loadedPagesCache = {};
 
+  // **************** Render Pdf Image ********************
   Future<TransferableTypedData?> _renderPdfPage(int pageIndex) async {
     return await widget.document.getPageImage(pageIndex);
   }
@@ -43,161 +52,115 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
         }
         return;
       }
-      if (renderedData == null) {
-        return;
+      // data ရှိမှ ထည့်မယ်
+      if (renderedData != null) {
+        final totalSize = _loadedPagesCache.values.fold(
+          0,
+          (prev, val) => prev + (val == null ? 0 : val.length),
+        );
+        widget.controller._pdfReaderEventStreamController.add(
+          PdfCacheChanged(length: _loadedPagesCache.length, size: totalSize),
+        );
+        if (!mounted) return;
+        setState(() {
+          _loadedPagesCache[index] = renderedData.materialize().asUint8List();
+        });
       }
-
-      if (!mounted) return;
-      setState(() {
-        _loadedPagesCache[index] = renderedData.materialize().asUint8List();
-        print("✅ [CACHE] Page $index Render ပြီးလို့ ဒေတာအစစ် သွင်းလိုက်ပြီ။");
-      });
     });
   }
+  // **************** Render Pdf Image ********************
 
-  /// ************ Layout Engine ***********
+  // ************ Layout Engine ***********
   double _lastScreenWidth = 0.0;
+  double _lastZoom = 1.0;
+  static const double _baseCanvasWidth = 390.0;
 
-  void _buildLayout(double originalScreenWidth) {
-    // 🚀 ၁။ Screen အမှန်တကယ် ပြောင်း/မပြောင်း စစ်ဖို့ မူရင်းအကျယ်ကိုပဲ သုံးပြီး Ratio ကြိုမှတ်မယ်
-    double scrollRatio = _totalHeight > 0
-        ? (_startScrollY / _totalHeight)
-        : 0.0;
+  void _buildLayout(BoxConstraints constraints) {
+    int backupPageIndex = widget.controller._currentPage - 1; // 0-based index
+    double relativeOffset = 0.0;
 
-    // 🚀 ၂။ မူရင်း variable ကို သွားမဖျက်ဘဲ ဒေသန္တရ (Local) variable အသစ်တစ်ခုနဲ့ပဲ Padding ကို နှုတ်မယ်
-    final usableWidth = originalScreenWidth - _paddingWidth;
+    // လက်ရှိ ရောက်နေတဲ့ Page ရဲ့ အစကနေ လူက ဘယ်လောက်အကွာအဝေးကို ရောက်နေလဲ (Zoom မဝင်ခင် မူရင်းအကွာအဝေးကို ရှာတာပါ)
+    if (backupPageIndex >= 0 &&
+        backupPageIndex < _pageOffsetRanges.length &&
+        _lastZoom != 0.0) {
+      double oldPageStart = _pageOffsetRanges[backupPageIndex].start;
+      // ရလာတဲ့ ကွာဟချက်ကို _lastZoom နဲ့ စားပြီး "မူရင်း Zoom (1.0) အတိုင်းအတာ" အဖြစ် ပြောင်းမှတ်ထားလိုက်တာပါ
+      relativeOffset = (_startScrollY - oldPageStart) / _lastZoom;
+    }
 
     double currentOffset = 0.0;
-    _pageOffsets = [];
+    _pageOffsetRanges = [];
 
     for (var page in widget.sizedPages) {
-      _pageOffsets.add(currentOffset);
       final ratio = page.width / page.height;
-      final pageHeight =
-          usableWidth / ratio; // 🚀 usableWidth နဲ့ပဲ အမြင့်တွက်မယ်
-      currentOffset += pageHeight + _spacing;
+      //canvs အတိုင်းယူမယ်
+      final pageHeight = _baseCanvasWidth / ratio;
+
+      final start = currentOffset * currentZoom;
+      final end = (currentOffset + pageHeight) * currentZoom;
+      // တစ်ခါတည်း သိမ်းလိုက်မယ်
+      _pageOffsetRanges.add(
+        _PageRange(index: page.index, start: start, end: end),
+      );
+      //
+      currentOffset += pageHeight;
     }
-    _totalHeight = currentOffset;
+    final originalScreenWidth = constraints.maxWidth;
 
-    if (_lastScreenWidth != 0.0 && _lastScreenWidth != originalScreenWidth) {
-      _startScrollY = scrollRatio * _totalHeight;
-    }
+    //zoom ဝင်ပြီးသား အမြင့်
+    _totalHeight = currentOffset * currentZoom;
+    // ၃။ 🎯 Zoom ပြောင်းသွားတာဖြစ်ဖြစ်၊ Screen လှည့်သွားတာဖြစ်ဖြစ် Scroll Position ကို ကွက်တိ ပြန်ညှိမယ်
+    if (backupPageIndex >= 0 && backupPageIndex < _pageOffsetRanges.length) {
+      // အသစ်ဆောက်လိုက်တဲ့ Layout ထဲက လက်ရှိ Page ရဲ့ Start အသစ်ကို ယူမယ်
+      double newPageStart = _pageOffsetRanges[backupPageIndex].start;
 
-    _lastScreenWidth = originalScreenWidth; // မူရင်း Size အစစ်ကိုပဲ သိမ်းထားမယ်
-  }
-
-  // 🚀 ၁။ Scroll Position တွက်ချက်မှုကို ရိုးရိုးရှင်းရှင်းပဲ ထားပါမယ် (Zoom မမြှောက်/မစားပါနဲ့)
-  void _updateScrollPosition(double deltaY, double screenHeight) {
-    setState(() {
-      _startScrollY += deltaY;
-      double maxScroll = _totalHeight - screenHeight;
-      if (maxScroll < 0) maxScroll = 0.0;
-      _startScrollY = _startScrollY.clamp(0.0, maxScroll);
-    });
-  }
-
-  // 🚀 ၃။ Viewport မှာ စာရွက်တွေ နေရာချတဲ့သင်္ချာ (ဒီနေရာမှာ Zoom ကို အကျိုးရှိရှိ သုံးပါမယ်)
-  Widget _buildPageItem(int index, double screenWidth) {
-    final double zoom = widget.controller.currentZoom;
-
-    final usableWidth = (screenWidth - _paddingWidth);
-    final page = widget.sizedPages[index];
-    final ratio = page.width / page.height;
-
-    final pageHeight = (usableWidth / ratio) * zoom;
-    final renderWidth = usableWidth * zoom;
-
-    // 🎯 _startScrollY ကော Offset ကောကို Zoom ချဲ့ထားတဲ့ အချိုးအတိုင်း နေရာချပေးခြင်း
-    final topPosition = (_pageOffsets[index] * zoom) - (_startScrollY * zoom);
-    final leftPosition = (screenWidth - renderWidth) / 2;
-
-    return Positioned(
-      left: leftPosition,
-      top: topPosition,
-      width: renderWidth,
-      height: pageHeight,
-      child: _pageItem(index),
-    );
-  }
-
-  // 🚀 ၄။ Scrollbar Logic ကိုလည်း ဒိုင်နမစ် အချိုးကျအောင် ညှိပါမယ်
-  Widget _scrollBar(double screenHeight) {
-    const double scrollbarHeight = 40;
-
-    if (!_isDragging) {
-      _currentScrollbarY = (_startScrollY / _totalHeight) * screenHeight;
-      if (_currentScrollbarY + scrollbarHeight > screenHeight) {
-        _currentScrollbarY = screenHeight - scrollbarHeight;
+      if (_lastZoom != currentZoom) {
+        // (က) တကယ်လို့ Zoom ပြောင်းသွားတာဆိုရင် -
+        // မူရင်းအကွာအဝေး (relativeOffset) ကို Zoom အသစ်နဲ့ မြှောက်ပြီး Page Start အသစ်ထဲ ပေါင်းထည့်မယ်
+        _startScrollY = newPageStart + (relativeOffset * currentZoom);
+      } else if (_lastScreenWidth != 0.0 &&
+          _lastScreenWidth != originalScreenWidth) {
+        // (ခ) တကယ်လို့ Screen လှည့်သွားတာ (Width ပြောင်းသွားတာ) ဆိုရင် -
+        // အရင်အတိုင်း Screen အချိုးအစားအတိုင်း ညှိပြီး ပေါင်းထည့်မယ်
+        double adjustedRelativeOffset =
+            (relativeOffset * _lastZoom / _lastScreenWidth) *
+            originalScreenWidth;
+        _startScrollY = newPageStart + adjustedRelativeOffset;
       }
     }
-    return Positioned(
-      top: _currentScrollbarY,
-      right: 5,
-      width: 10,
-      height: scrollbarHeight,
-      child: GestureDetector(
-        onVerticalDragStart: (details) {
-          _isDragging = true;
-          scrollbarDrapOffset = details.localPosition.dy;
-        },
-        onVerticalDragEnd: (details) {
-          _isDragging = false;
-          setState(() {});
-        },
-        onVerticalDragUpdate: (details) {
-          setState(() {
-            _currentScrollbarY += details.delta.dy;
-            if (_currentScrollbarY < 0) _currentScrollbarY = 0;
-            double maxScrollbarTop = screenHeight - scrollbarHeight;
-            if (_currentScrollbarY > maxScrollbarTop) {
-              _currentScrollbarY = maxScrollbarTop;
-            }
 
-            double maxScroll = _totalHeight - screenHeight;
-            if (maxScroll > 0) {
-              // 🎯 ဒိုင်နမစ်တန်ဖိုးဖြစ်အောင် ပြောင်းလဲလိုက်ခြင်း
-              _startScrollY =
-                  (_currentScrollbarY / maxScrollbarTop) * maxScroll;
-            } else {
-              maxScroll = 0.0;
-            }
+    // ၄။ Bound ကျော်မသွားအောင် အမြဲတမ်း ပိတ်ပေးမယ်
+    final maxScroll = _totalHeight - constraints.maxHeight;
+    _startScrollY = _startScrollY.clamp(0.0, maxScroll > 0 ? maxScroll : 0.0);
 
-            _startScrollY = _startScrollY.clamp(0.0, maxScroll);
-          });
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.deepPurple.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(20),
-          ),
-        ),
-      ),
-    );
+    // လက်ရှိ တန်ဖိုးတွေကို နောက်တစ်ကြိမ်အတွက် မူရင်းအဖြစ် ပြန်မှတ်မယ်
+    _lastZoom = currentZoom;
+    _lastScreenWidth = originalScreenWidth;
   }
+  // ************ Layout Engine ***********
 
-  /// ************ Event & Sliding Cache Control ***********
-  // 🚀 ၂။ Current Page ရှာတဲ့နေရာမှာ အောက်က Loop ကို Zoom နဲ့ ကိုက်ညီအောင် ပြင်ပါမယ်
+  // ************ Event & Sliding Cache Control ***********
+  final Map<int, bool> _visiablePages = {};
+
   void _updateCurrentPageEvent(double viewportHeight, double screenWidth) {
-    if (_pageOffsets.isEmpty) return;
-    if (_isDragging) return;
+    if (_pageOffsetRanges.isEmpty) return;
 
+    double viewportTop = _startScrollY;
+    double viewportBottom = _startScrollY + viewportHeight;
     double currentViewportCenter = _startScrollY + (viewportHeight / 2);
+
     int detectedPageIndex = 0;
 
-    for (var i = 0; i < _pageOffsets.length; i++) {
-      final pageStart = _pageOffsets[i];
-      final ratio = widget.sizedPages[i].width / widget.sizedPages[i].height;
-      final pageHeight = (screenWidth - _paddingWidth) / ratio;
-      final pageEnd = pageStart + pageHeight;
-
-      // 💡 _startScrollY ရော Offset ရောက Standard ချင်း တူနေလို့ Zoom ထည့်မြှောက်စရာ မလိုတော့ဘဲ ကွက်တိ မှန်သွားပါပြီ
-      if (currentViewportCenter >= pageStart &&
-          currentViewportCenter <= pageEnd) {
-        detectedPageIndex = i;
+    for (var page in _pageOffsetRanges) {
+      // Screen ရဲ့ အလယ်ဗဟိုဟာ ဒီစာမျက်နှာရဲ့ အစနဲ့ အဆုံးကြားထဲမှာ ရှိနေသလား?
+      if (currentViewportCenter >= page.start &&
+          currentViewportCenter < page.end) {
+        detectedPageIndex = page.index;
         break;
       }
     }
 
+    // send controller to update
     Future.microtask(() {
       if (!mounted) return;
       widget.controller._currentPage = detectedPageIndex + 1;
@@ -205,28 +168,50 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
         PdfPageChanged(detectedPageIndex + 1),
       );
     });
+    if (_isDragging) return;
+    Map<int, bool> temporaryVisibleMap = {};
+    final double bufferPadding = 100.0;
 
-    if (_currentPageIndex != detectedPageIndex || _loadedPagesCache.isEmpty) {
-      _currentPageIndex = detectedPageIndex;
-      int cacheStartRange = _currentPageIndex - _bufferSize;
-      int cacheEndRange = _currentPageIndex + _bufferSize;
+    for (var page in _pageOffsetRanges) {
+      // Buffer Padding အပါအဝင် လက်ရှိ Screen ဧရိယာထဲမှာ ညှပ်နေသလား စစ်ဆေးခြင်း
+      bool isVisible =
+          (page.start <= viewportBottom + bufferPadding) &&
+          (page.end >= viewportTop - bufferPadding);
 
-      if (cacheStartRange < 0) cacheStartRange = 0;
-      if (cacheEndRange >= widget.sizedPages.length) {
-        cacheEndRange = widget.sizedPages.length - 1;
-      }
-
-      for (int index = cacheStartRange; index <= cacheEndRange; index++) {
-        _initPageIntoCache(index);
-      }
-
-      final activeKeys = List<int>.from(_loadedPagesCache.keys);
-      for (int index in activeKeys) {
-        if (index < cacheStartRange || index > cacheEndRange) {
-          _loadedPagesCache.remove(index);
-        }
+      if (isVisible) {
+        temporaryVisibleMap[page.index] = true;
+        _initPageIntoCache(page.index);
       }
     }
+
+    // Current Page ရဲ့ ရှေ့စာမျက်နှာ (တကယ်လို့ Index 0 ထက် ကြီးနေရင်)
+    int prevPage = detectedPageIndex - 1;
+    if (prevPage >= 0) {
+      temporaryVisibleMap[prevPage] = true;
+      _initPageIntoCache(prevPage);
+    }
+
+    // လက်ရှိ ရောက်နေတဲ့ စာမျက်နှာ (Current Page)
+    temporaryVisibleMap[detectedPageIndex] = true;
+    _initPageIntoCache(detectedPageIndex);
+    // call index
+
+    // Current Page ရဲ့ နောက်စာမျက်နှာ (တကယ်လို့ စုစုပေါင်းစာမျက်နှာအရေအတွက်ထက် ငယ်နေရင်)
+    int nextPage = detectedPageIndex + 1;
+    if (nextPage < widget.sizedPages.length) {
+      temporaryVisibleMap[nextPage] = true;
+      _initPageIntoCache(nextPage);
+    }
+
+    // visiable page အတွက်
+    _visiablePages.clear();
+    _visiablePages.addAll(temporaryVisibleMap);
+    // send event
+    widget.controller._pdfReaderEventStreamController.add(
+      PdfVisiablePageChanged(map: _visiablePages),
+    );
+    // cache ကို limit ထားမယ်
+    _maintainCacheLimit(detectedPageIndex);
   }
 
   @override
@@ -237,6 +222,18 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
       if (event is UserZoom) {
         _applyZoom(event.zoom);
       }
+      if (event is UserJumpToPage) {
+        _goToPage(event.page - 1);
+      }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.controller._pdfReaderEventStreamController.add(
+        PdfOnLoaded(
+          page: 1,
+          totalPage: widget.controller._totalPages,
+          loadedElapsedTime: widget.controller._stopWatch.elapsed,
+        ),
+      );
     });
   }
 
@@ -244,59 +241,62 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
   @override
   void dispose() {
     _loadedPagesCache.clear();
-    _transformationController.dispose();
     super.dispose();
   }
 
-  final _transformationController = TransformationController();
-
   @override
   Widget build(BuildContext context) {
-    final allSize = _loadedPagesCache.values.fold<int>(
+    print(_visiablePages);
+    final totalSize = _loadedPagesCache.values.fold(
       0,
-      (previousValue, element) =>
-          previousValue + (element == null ? 0 : element.length),
+      (prev, val) => prev + (val == null ? 0 : val.length),
     );
     print(
-      'cache size: ${_loadedPagesCache.length} size:${allSize.toFileSizeLabel()} - currentPage: $_currentPageIndex',
+      'Cache- Length:${_loadedPagesCache.length} - Size: ${totalSize.fileSizeLabel()}',
     );
+    print('current page: ${widget.controller._currentPage}');
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        _buildLayout(constraints.maxWidth);
+        _buildLayout(constraints);
         _updateCurrentPageEvent(constraints.maxHeight, constraints.maxWidth);
 
-        return Listener(
-          onPointerSignal: (event) {
-            if (event is PointerScrollEvent) {
-              _updateScrollPosition(
-                event.scrollDelta.dy,
-                constraints.maxHeight,
-              );
-            }
-          },
-          child: Container(
-            color: Colors.grey[100],
-            width: constraints.maxWidth,
-            height: constraints.maxHeight,
-            child: Stack(
-              children: [
-                // 🚀 Cache ထဲမှာ တကယ်ရှိတဲ့ ၁၁ ရွက်ပဲ Render လုပ်တော့မယ်
-                for (int activeIndex in _loadedPagesCache.keys) ...[
-                  _buildPageItem(activeIndex, constraints.maxWidth),
-                ],
-                _scrollBar(constraints.maxHeight),
-              ],
-            ),
-          ),
-        );
+        return _pointerListener(constraints);
       },
     );
   }
 
+  // ************** Scroll Pointer Listener ************
+  Widget _pointerListener(BoxConstraints constraints) {
+    return Listener(
+      onPointerSignal: (event) {
+        if (event is PointerScrollEvent) {
+          _updateScrollPosition(event.scrollDelta.dy, constraints.maxHeight);
+        }
+      },
+      child: Container(
+        color: Colors.grey[100],
+        width: constraints.maxWidth,
+        height: constraints.maxHeight,
+        child: Stack(
+          children: [
+            // 🚀 Cache ထဲမှာ တကယ်ရှိတဲ့ ၁၁ ရွက်ပဲ Render လုပ်တော့မယ်
+            for (int activeIndex in _visiablePages.keys) ...[
+              _buildPageItem(activeIndex, constraints.maxWidth),
+            ],
+            _scrollBar(constraints.maxHeight),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ************** item logic *****************
+
   Widget _pageItem(int index) {
     final data = _loadedPagesCache[index];
     if (data != null) {
-      return Image.memory(data);
+      return Image.memory(data, fit: BoxFit.fill);
     }
 
     return Container(
@@ -309,12 +309,146 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
     );
   }
 
-  /// ************ Scrollbar Logic ***********
+  // *************** build page item ********************
+  Widget _buildPageItem(int index, double screenWidth) {
+    final page = widget.sizedPages[index];
+    final ratio = page.width / page.height;
+
+    // ၁။ 🎯 Render လုပ်မယ့် Width နဲ့ Height ကို တွက်ခြင်း
+    // _buildLayout က တွက်ချက်ပုံစံအတိုင်း ကွက်တိဖြစ်အောင် တွက်ထားပါတယ်
+    final renderWidth = _baseCanvasWidth * currentZoom;
+    final pageHeight = (_baseCanvasWidth / ratio) * currentZoom;
+
+    final topPosition = _pageOffsetRanges[index].start - _startScrollY;
+
+    // Screen ကြီးလာရင် စာရွက်က ကြီးမလာဘဲ Screen ရဲ့ အလယ်တည့်တည့်မှာ လှလှပပ ငြိမ်နေစေမယ့် Math
+    final leftPosition = (screenWidth - renderWidth) / 2;
+
+    return Positioned(
+      left: leftPosition,
+      top: topPosition,
+      width: renderWidth,
+      height: pageHeight,
+      child: _pageItem(index),
+    );
+  }
+
+  // ************ Scrollbar Logic ***********
   double scrollbarDrapOffset = 0;
   bool _isDragging = false;
   double _currentScrollbarY = 0.0;
 
+  Widget _scrollBar(double screenHeight) {
+    double scrollbarHeight = 40;
+    double scrollbarWidth = 10;
+    double scrollbarRightPosition = 0;
+    Widget scrollWidget = _defaultScrollbar;
+    if (widget.controller._customScrollbar != null) {
+      final customScroll = widget.controller._customScrollbar!(context);
+      scrollWidget = customScroll.child;
+      scrollbarWidth = customScroll.scrollbarWidth;
+      scrollbarHeight = customScroll.scrollbarHeight;
+      scrollbarRightPosition = customScroll.scrollbarRightPosition;
+    }
+
+    final double maxScroll = _totalHeight - screenHeight;
+    final double maxScrollbarTop = screenHeight - scrollbarHeight;
+
+    // ၁။ 🎯 [_isDragging မဟုတ်ခဲရင်] Scrollbar နေရာကို မူရင်းအတိုင်း ပြန်ညှိတဲ့ Math Formula အမှန်
+    if (!_isDragging) {
+      if (maxScroll > 0) {
+        // _totalHeight အစား maxScroll (အမြင့်ဆုံးရွေ့နိုင်တဲ့အမြင့်) နဲ့ အချိုးချရပါမယ်
+        _currentScrollbarY = (_startScrollY / maxScroll) * maxScrollbarTop;
+      } else {
+        _currentScrollbarY = 0.0;
+      }
+    }
+
+    return Positioned(
+      top: _currentScrollbarY,
+      right: scrollbarRightPosition,
+      width: scrollbarWidth,
+      height: scrollbarHeight,
+      child: GestureDetector(
+        onVerticalDragStart: (details) {
+          _isDragging = true;
+          scrollbarDrapOffset = details.localPosition.dy;
+        },
+        onVerticalDragEnd: (details) {
+          _isDragging = false;
+          setState(() {});
+        },
+        onVerticalDragUpdate: (details) {
+          setState(() {
+            // 🎯 ပြင်ဆင်ချက် ၂: Drag Position ကို တွက်တဲ့အခါ globalPosition ထဲကနေ
+            // နှိပ်ခဲ့တဲ့ Scrollbar ရဲ့ Offset ကို နှုတ်ပြီး တွက်ရင် ပိုပြီး Smooth ဖြစ်ပြီး မတုန်တော့ပါဘူး
+            RenderBox renderBox = context.findRenderObject() as RenderBox;
+            double localTop = renderBox
+                .globalToLocal(details.globalPosition)
+                .dy;
+
+            // လက်ရှိ ရောက်ရမယ့် Scrollbar ရဲ့ Top Position
+            _currentScrollbarY = localTop - scrollbarDrapOffset;
+
+            // Boundary ပိတ်မယ်
+            _currentScrollbarY = _currentScrollbarY.clamp(0.0, maxScrollbarTop);
+
+            // Scrollbar နေရာကနေ Screen Scroll Position (_startScrollY) ကို ပြန်ပြောင်းလဲတွက်ချက်မယ်
+            _startScrollY = (_currentScrollbarY / maxScrollbarTop) * maxScroll;
+            _startScrollY = _startScrollY.clamp(0.0, maxScroll);
+          });
+
+          // ၄။ 🎯 Scrollbar ဆွဲနေတဲ့အချိန်မှာလည်း လက်ရှိဘယ်နှမျက်နှာ ရောက်နေလဲ ချက်ချင်းသိအောင် လှမ်းခေါ်ပေးရပါမယ်
+          _updateCurrentPageEvent(screenHeight, _lastScreenWidth);
+        },
+        child: scrollWidget,
+      ),
+    );
+  }
+
+  // ************ Scroll Logic ***********
+  void _updateScrollPosition(double deltaY, double screenHeight) {
+    setState(() {
+      // ၁။ Scroll Position ကို အရင်ပေါင်း/နှုတ် လုပ်မယ်
+      _startScrollY += deltaY;
+
+      // ၂။ Max Scroll Bounds ကို တွက်မယ်
+      final maxScroll = _totalHeight - screenHeight;
+
+      // 🎯 Math Logic အမှန်:
+      // တကယ်လို့ _totalHeight က screenHeight ထက် ကြီးမှသာ maxScroll အတိုင်း ကန့်သတ်မယ်
+      // သေးနေရင် (စာရွက်အကုန်လုံးက screen ထဲ ဝင်ဆန့်နေရင်) scroll ဆွဲလို့မရအောင် 0.0 မှာပဲ ပိတ်ထားမယ်
+      if (maxScroll > 0) {
+        _startScrollY = _startScrollY.clamp(0.0, maxScroll);
+      } else {
+        _startScrollY = 0.0;
+      }
+    });
+
+    // 🎯 အရေးကြီးဆုံးအပိုင်း - Scroll အနေအထား ပြောင်းသွားတာနဲ့ တစ်ပြိုင်နက်
+    // လက်ရှိ ဘယ်နှမျက်နှာမြောက် ရောက်သွားပြီလဲဆိုတာကို ချက်ချင်း (Real-time) လှမ်းတွက်ခိုင်းလိုက်တာပါ
+    // အဲဒါဆိုရင် အောက်ဆုံးရောက်သွားလည်း Page နံပါတ်က နောက်ဆုံး page မှာ တင်ငြိမ်နေမှာ ဖြစ်ပါတယ်။
+    _updateCurrentPageEvent(screenHeight, _lastScreenWidth);
+  }
+
+  // ******************* Zoom ****************
   double get currentZoom => widget.controller.currentZoom;
+
+  // ****************** Maintain Cache ***********************
+  void _maintainCacheLimit(int pageIndex) {
+    final startKeep = pageIndex - widget.controller.loadCacheLength;
+    final endKeep = pageIndex + widget.controller.loadCacheLength;
+
+    final cachesIndex = _loadedPagesCache.keys.toList();
+
+    for (var index in cachesIndex) {
+      if (index < startKeep || index > endKeep) {
+        if (_loadedPagesCache.containsKey(index)) {
+          _loadedPagesCache.remove(index);
+        }
+      }
+    }
+  }
 
   void _applyZoom(double zoomValue) {
     if (widget.controller._currentZoom != zoomValue) {
@@ -323,9 +457,17 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
         PdfZoomChanged(zoomValue),
       );
     }
-
-    // 🚀 Matrix4 သုံးစရာမလိုတော့ဘဲ setState လုပ်လိုက်တာနဲ့
-    // Layout Engine က အချိုးကျ ကွက်တိ လိုက်ချဲ့ပေးသွားပါလိမ့်မယ်
     setState(() {});
+  }
+
+  // go to page
+  void _goToPage(int pageIndex) {
+    if (pageIndex < 0 || pageIndex >= _pageOffsetRanges.length) return;
+    setState(() {
+      _startScrollY = _pageOffsetRanges[pageIndex].start;
+    });
+    widget.controller._pdfReaderEventStreamController.add(
+      PdfPageChanged(pageIndex + 1),
+    );
   }
 }

@@ -12,6 +12,7 @@ import 'package:flutter/gestures.dart';
 
 part 't_pdf_controller_v3.dart';
 part 't_custom_pdf_viewer.dart';
+part 'custom_widgets.dart';
 
 class TPdfReaderV3 extends StatefulWidget {
   final String source;
@@ -62,10 +63,7 @@ class _TPdfReaderV3State extends State<TPdfReaderV3> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         timer.stop();
 
-        widget.controller._attachReader(
-          loadedElapsedTime: timer.elapsed,
-          totalPage: sizedPages.length + 1,
-        );
+        widget.controller._attachReader(totalPage: sizedPages.length);
       });
 
       if (!mounted) return;

@@ -73,6 +73,7 @@ class PdfPage {
     double zoom = 1.0,
     int rotate = 0,
     int flags = 0,
+    PageImageType imageType = .jpg,
     PdfPageRenderImageErrorCallback? renderImageErrorCallback,
   }) {
     Pointer<fpdf_bitmap_t__> bitmap = nullptr;
@@ -113,16 +114,24 @@ class PdfPage {
       final nativeBytes = Uint8List.fromList(
         bufferPtr.asTypedList(bufferLength),
       );
-      // convert image
-      final image = img.Image.fromBytes(
-        width: (pageWidth * zoom).toInt(),
-        height: (pageHeight * zoom).toInt(),
-        bytes: nativeBytes.buffer,
-        order: img.ChannelOrder.bgra,
-      );
-      final imageBytes = img.encodeJpg(image, quality: quality);
-      //Zero copy
-      return TransferableTypedData.fromList([imageBytes]);
+      if (imageType == .rgbaRaw) {
+        //Zero copy
+        return TransferableTypedData.fromList([nativeBytes]);
+      }
+      // jpg type
+      if (imageType == .jpg) {
+        // convert image
+        final image = img.Image.fromBytes(
+          width: (pageWidth * zoom).toInt(),
+          height: (pageHeight * zoom).toInt(),
+          bytes: nativeBytes.buffer,
+          order: img.ChannelOrder.bgra,
+        );
+        final imageBytes = img.encodeJpg(image, quality: quality);
+        //Zero copy
+        return TransferableTypedData.fromList([imageBytes]);
+      }
+      return null;
     } catch (e) {
       if (renderImageErrorCallback != null) {
         renderImageErrorCallback.call(e.toString());

@@ -46,3 +46,13 @@ class PdfPageBitmapPointerResult {
     required this.bitmapPointer,
   });
 }
+
+sealed class PdfPageImageType {}
+
+class PdfPageRgbaRawImage extends PdfPageImageType {}
+
+class PdfPageJpgImage extends PdfPageImageType {}
+
+class PdfPagePngImage extends PdfPageImageType {}
+
+enum PageImageType { jpg, rgbaRaw }
