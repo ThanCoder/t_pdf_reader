@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 part of 't_pdf_render_v3_base.dart';
 
 class TCustomScrollbarWidget {
@@ -19,3 +20,12 @@ final _defaultScrollbar = Container(
     borderRadius: BorderRadius.circular(20),
   ),
 );
+
+class TCustomPageFooterWidget {
+  final double basefooterHeight;
+  final Widget child;
+  const TCustomPageFooterWidget({
+    required this.basefooterHeight,
+    required this.child,
+  });
+}

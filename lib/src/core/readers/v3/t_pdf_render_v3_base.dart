@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:t_pdf_reader/src/core/low_levels/backgrounds/pdf_background_document.dart';
 import 'package:t_pdf_reader/src/core/low_levels/classes/types.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
@@ -82,9 +83,15 @@ class _TPdfReaderV3State extends State<TPdfReaderV3> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
+      if (widget.controller._customLoader != null) {
+        return widget.controller._customLoader!(context);
+      }
       return Center(child: CircularProgressIndicator.adaptive());
     }
     if (error != null) {
+      if (widget.controller._customError != null) {
+        return widget.controller._customError!(context, error!);
+      }
       return Center(
         child: Text(error!, style: TextStyle(color: Colors.red)),
       );

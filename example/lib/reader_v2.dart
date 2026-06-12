@@ -37,7 +37,7 @@ class _ReaderV2State extends State<ReaderV2> {
     pdfController.pdfReaderEvent.listen((event) {
       if (event is PdfOnLoaded) {
         print('Pdf Loaded Time: ${event.loadedElapsedTime.inMilliseconds} ms');
-        pdfController.jumpToPage(10);
+        // pdfController.jumpToPage(10);
         // pdfController.setZoom(1.25);
 
         showTSnackBar(
@@ -63,7 +63,7 @@ class _ReaderV2State extends State<ReaderV2> {
         body: Stack(
           children: [
             Positioned.fill(
-              top: 40,
+              top: isFullscreen ? 0 : 40,
               child: ClipRRect(
                 child: ColorFiltered(
                   colorFilter: ColorFilter.mode(

@@ -1,6 +1,10 @@
 part of 't_pdf_render_v3_base.dart';
 
 typedef CustomScrollBar = TCustomScrollbarWidget Function(BuildContext context);
+typedef CustomLoader = Widget Function(BuildContext context);
+typedef CustomError = Widget Function(BuildContext context, String error);
+typedef CustomPdfPageFooterWidget =
+    TCustomPageFooterWidget Function(BuildContext context, int pageIndex);
 
 class TPdfControllerV3 extends ChangeNotifier {
   // Internal State (Reader ဘက်ကနေ လာပြီး အပ်ဒိတ်လုပ်မယ့် တန်ဖိုးများ)
@@ -15,9 +19,19 @@ class TPdfControllerV3 extends ChangeNotifier {
   double _currentZoom = 1.0;
   final double _loadCacheLength;
   final CustomScrollBar? _customScrollbar;
+  final CustomError? _customError;
+  final CustomLoader? _customLoader;
+  final CustomPdfPageFooterWidget? _customPdfPageFooterWidget;
+  final double _mouseScrollSensitivity;
+  final double _touchDragSensitivity;
 
   TPdfControllerV3({
+    this._mouseScrollSensitivity = 1.0,
+    this._touchDragSensitivity = 1.0,
+    this._customPdfPageFooterWidget,
     this._customScrollbar,
+    this._customLoader,
+    this._customError,
     this._currentPage = 0,
     this._minScale = 0.3,
     this._maxScale = 4.0,
