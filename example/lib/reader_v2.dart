@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
@@ -162,15 +160,23 @@ class _ReaderV2State extends State<ReaderV2> {
                   isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
                 ),
               ),
-              IconButton(
-                onPressed: () {
-                  isScaleEnable = !isScaleEnable;
-                  pdfController.setPanEnabled(isScaleEnable);
-                  if (Platform.isAndroid) {
-                    pdfController.setScaleEnabled(isScaleEnable);
-                  }
-                },
-                icon: Icon(isScaleEnable ? Icons.lock_open : Icons.lock),
+              ListenableBuilder(
+                listenable: pdfController,
+                builder: (context, child) => IconButton(
+                  onPressed: () {
+                    pdfController.setOffsetXAutoLockedEnable(
+                      !pdfController.isOffsetXLocked,
+                    );
+                    pdfController.setOffsetXLocked(
+                      !pdfController.isOffsetXLocked,
+                    );
+                  },
+                  icon: Icon(
+                    pdfController.isOffsetXLocked
+                        ? Icons.lock
+                        : Icons.lock_open,
+                  ),
+                ),
               ),
             ],
           ),

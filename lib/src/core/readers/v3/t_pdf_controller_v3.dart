@@ -13,10 +13,10 @@ class TPdfControllerV3 extends ChangeNotifier {
   bool _isReady = false;
   double _minScale = 1.0;
   double _maxScale = 4.0;
-  bool _scaleEnabled = false;
-  bool _panEnabled = false;
-  PanAxis _panAxis = PanAxis.free;
   double _currentZoom = 1.0;
+  bool _isOffsetXLocked;
+  bool _isOffsetXAutoLockedEnable;
+  double _currentReaderOffsetX;
   final double _loadCacheLength;
   final CustomScrollBar? _customScrollbar;
   final CustomError? _customError;
@@ -24,8 +24,13 @@ class TPdfControllerV3 extends ChangeNotifier {
   final CustomPdfPageFooterWidget? _customPdfPageFooterWidget;
   final double _mouseScrollSensitivity;
   final double _touchDragSensitivity;
+  final bool _showScrollbar;
 
   TPdfControllerV3({
+    this._currentReaderOffsetX = 0.0,
+    this._isOffsetXLocked = true,
+    this._isOffsetXAutoLockedEnable = true,
+    this._showScrollbar = true,
     this._mouseScrollSensitivity = 1.0,
     this._touchDragSensitivity = 1.0,
     this._customPdfPageFooterWidget,
@@ -35,21 +40,18 @@ class TPdfControllerV3 extends ChangeNotifier {
     this._currentPage = 0,
     this._minScale = 0.3,
     this._maxScale = 4.0,
-    this._scaleEnabled = false,
-    this._panAxis = PanAxis.free,
-    this._panEnabled = false,
     this._currentZoom = 1.0,
     this._loadCacheLength = 10,
   });
 
+  double get currentReaderOffsetX => _currentReaderOffsetX;
+  bool get isOffsetXLocked => _isOffsetXLocked;
+  bool get isOffsetXAutoLockedEnable => _isOffsetXAutoLockedEnable;
   int get currentPage => _currentPage;
   int get totalPages => _totalPages;
   bool get isReady => _isReady;
   double get minScale => _minScale;
   double get maxScale => _maxScale;
-  bool get scaleEnabled => _scaleEnabled;
-  bool get panEnabled => _panEnabled;
-  PanAxis get panAxis => _panAxis;
   double get currentZoom => _currentZoom;
   double get loadCacheLength => _loadCacheLength;
   // stop wathc
@@ -113,18 +115,13 @@ class TPdfControllerV3 extends ChangeNotifier {
     }
   }
 
-  void setScaleEnabled(bool enable) {
-    _scaleEnabled = enable;
+  void setOffsetXLocked(bool locked) {
+    _isOffsetXLocked = locked;
     notifyListeners();
   }
 
-  void setPanEnabled(bool enable) {
-    _panEnabled = enable;
-    notifyListeners();
-  }
-
-  void setPanAxis(PanAxis axis) {
-    _panAxis = axis;
+  void setOffsetXAutoLockedEnable(bool enable) {
+    _isOffsetXAutoLockedEnable = enable;
     notifyListeners();
   }
 

@@ -27,7 +27,55 @@ class _PageRange {
   });
 }
 
-class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
+class _TCustomPdfViewerState extends State<TCustomPdfViewer>
+    with SingleTickerProviderStateMixin {
+  // ************ Scroll Animation *****************
+  late AnimationController _scrollAnimationController;
+  final _scrollPhysics = const ClampingScrollPhysics();
+
+  void _animateScroll(double velocity) {
+    final simulation = _scrollPhysics.createBallisticSimulation(
+      ScrollMetricsNotification(
+        metrics: FixedScrollMetrics(
+          minScrollExtent: 0,
+          maxScrollExtent: _totalHeight,
+          pixels: _startScrollY,
+          viewportDimension: MediaQuery.of(context).size.height,
+          axisDirection: AxisDirection.down,
+          devicePixelRatio: MediaQuery.of(context).devicePixelRatio,
+        ),
+        context: context,
+      ).metrics,
+      velocity,
+    );
+    if (simulation == null) return;
+    _scrollAnimationController.value = _startScrollY;
+    _scrollAnimationController.animateWith(simulation);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollAnimationController = AnimationController.unbounded(vsync: this);
+    _scrollAnimationController.addListener(() {
+      double value = _scrollAnimationController.value;
+
+      // အောက်ဆုံး သို့မဟုတ် အပေါ်ဆုံး boundary ရောက်ရင် animation ကို ရပ်လိုက်ခြင်း
+      if (value < 0) {
+        value = 0;
+        _scrollAnimationController.stop();
+      } else if (value > _totalHeight) {
+        value = _totalHeight;
+        _scrollAnimationController.stop();
+      }
+
+      setState(() {
+        _startScrollY = value;
+      });
+    });
+    _init();
+  }
+
   double _startScrollY = 0.0;
   List<_PageRange> _pageOffsetRanges = [];
   double _totalHeight = 0.0;
@@ -109,7 +157,6 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
 
     //zoom ဝင်ပြီးသား အမြင့်
     _totalHeight = currentOffset * currentZoom;
-    // ၃။ 🎯 Zoom ပြောင်းသွားတာဖြစ်ဖြစ်၊ Screen လှည့်သွားတာဖြစ်ဖြစ် Scroll Position ကို ကွက်တိ ပြန်ညှိမယ်
     if (backupPageIndex >= 0 && backupPageIndex < _pageOffsetRanges.length) {
       // အသစ်ဆောက်လိုက်တဲ့ Layout ထဲက လက်ရှိ Page ရဲ့ Start အသစ်ကို ယူမယ်
       double newPageStart = _pageOffsetRanges[backupPageIndex].start;
@@ -133,7 +180,19 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
     final maxScroll = _totalHeight - constraints.maxHeight;
     _startScrollY = _startScrollY.clamp(0.0, maxScroll > 0 ? maxScroll : 0.0);
 
-    // လက်ရှိ တန်ဖိုးတွေကို နောက်တစ်ကြိမ်အတွက် မူရင်းအဖြစ် ပြန်မှတ်မယ်
+    // left-right scroll အတွက်
+    final renderWidth = _baseCanvasWidth * currentZoom;
+
+    if (renderWidth > originalScreenWidth) {
+      final maxScrollX = (renderWidth - originalScreenWidth) / 2;
+      widget.controller._currentReaderOffsetX = widget
+          .controller
+          ._currentReaderOffsetX
+          .clamp(-maxScrollX, maxScrollX);
+    } else {
+      widget.controller._currentReaderOffsetX = 0.0;
+    }
+
     _lastZoom = currentZoom;
     _lastScreenWidth = originalScreenWidth;
   }
@@ -214,9 +273,8 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
     _maintainCacheLimit(detectedPageIndex);
   }
 
-  @override
-  void initState() {
-    super.initState();
+  // pdf init
+  void _init() {
     _initPageIntoCache(0);
     widget.controller._userEvent.listen((event) {
       if (event is UserZoom) {
@@ -227,6 +285,7 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.controller._stopWatch.stop();
       widget.controller._pdfReaderEventStreamController.add(
         PdfOnLoaded(
           page: 1,
@@ -243,6 +302,7 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
     _keyboardFocusNode.dispose();
     _loadedPagesCache.clear();
     _goToPageDelayTimer?.cancel();
+    _scrollAnimationController.dispose();
     super.dispose();
   }
 
@@ -273,6 +333,7 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
   Widget _mobileGestureListener(BoxConstraints constraints) {
     return GestureDetector(
       onScaleStart: (details) {
+        _scrollAnimationController.stop();
         _baseZoom = currentZoom;
       },
       onScaleUpdate: (details) {
@@ -286,12 +347,42 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
             ),
           );
         } else {
+          // mouse,touch -> position ပြောင်းလဲတာ
+          final deltaX =
+              details.focalPointDelta.dx *
+              widget.controller._touchDragSensitivity;
+          final deltaY =
+              details.focalPointDelta.dy *
+              widget.controller._touchDragSensitivity;
+          // config ကိုစစ်
+          bool offsetXlocked = widget.controller._isOffsetXLocked;
+          // Smart lock ပွင့်နေရင်
+          if (!widget.controller._isOffsetXAutoLockedEnable) {
+            if (currentZoom > 1.0) {
+              if (deltaX.abs() > (deltaY.abs() * 1.5)) {
+                offsetXlocked = false;
+              }
+            }
+          }
+          // update val
+          setState(() {
+            _startScrollY -= deltaY;
+            if (!offsetXlocked) {
+              widget.controller._currentReaderOffsetX -= deltaX;
+            }
+          });
           // ဒါက လက်နဲ့ ဆွဲနေတာ
-          _updateScrollPosition(
-            -details.focalPointDelta.dy *
-                widget.controller._touchDragSensitivity,
-            constraints.maxHeight,
-          );
+          // _updateScrollPosition(-deltaY, constraints.maxHeight);
+
+          _buildLayout(constraints);
+        }
+      },
+      onScaleEnd: (details) {
+        // - ထည့်ဖို့ အရေးကြီးတယ်နော်
+        //touch scroll က ပြောင်းပြန်ကြီး
+        final velocity = -details.velocity.pixelsPerSecond.dy;
+        if (velocity.abs() > 0) {
+          _animateScroll(velocity);
         }
       },
       child: _pointerListener(constraints),
@@ -342,24 +433,31 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
         }
         return KeyEventResult.ignored;
       },
-      child: Container(
-        color: Colors.grey[100],
-        width: constraints.maxWidth,
-        height: constraints.maxHeight,
-        child: Stack(
-          children: [
-            // 🚀 Cache ထဲမှာ တကယ်ရှိတဲ့ ၁၁ ရွက်ပဲ Render လုပ်တော့မယ်
-            for (int activeIndex in _visiablePages.keys)
-              ..._buildPageItem(activeIndex, constraints.maxWidth),
-            _scrollBar(constraints.maxHeight),
-          ],
-        ),
-      ),
+      child: _buildPageItems(constraints),
     );
   }
 
   // *************** build page item ********************
-  List<Widget> _buildPageItem(int index, double screenWidth) {
+  Widget _buildPageItems(BoxConstraints constraints) {
+    return Container(
+      color: Colors.grey[100],
+      width: constraints.maxWidth,
+      height: constraints.maxHeight,
+      child: Stack(
+        children: [
+          // 🚀 Cache ထဲမှာ တကယ်ရှိတဲ့ ၁၁ ရွက်ပဲ Render လုပ်တော့မယ်
+          for (int activeIndex in _visiablePages.keys) ...[
+            _buildPageItem(activeIndex, constraints.maxWidth),
+          ],
+          // scrollbar
+          if (widget.controller._showScrollbar)
+            _scrollBar(constraints.maxHeight),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageItem(int index, double screenWidth) {
     final page = widget.sizedPages[index];
     final ratio = page.width / (page.height);
 
@@ -370,23 +468,24 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
 
     final topPosition = _pageOffsetRanges[index].start - _startScrollY;
 
-    // Screen ကြီးလာရင် စာရွက်က ကြီးမလာဘဲ Screen ရဲ့ အလယ်တည့်တည့်မှာ လှလှပပ ငြိမ်နေစေမယ့် Math
-    final leftPosition = (screenWidth - renderWidth) / 2;
+    // စာရွက်ရဲ့ မူလ အလယ်ဗဟိုနေရာ (ဥပမာ - (400 - 600) / 2 = -100)
+    final baseLeft = (screenWidth - renderWidth) / 2;
 
-    return [
-      Positioned(
-        left: leftPosition,
-        top: topPosition,
-        width: renderWidth,
-        height: pageHeight,
-        child: Column(
-          children: [
-            Expanded(child: _animatedPageItem(index)),
-            _footerPageItem(index, renderWidth),
-          ],
-        ),
+    // 🔥 -100 ထဲကနေ လက်နဲ့ဆွဲထားတဲ့ _startScrollX ကို နုတ်ပေးခြင်းဖြင့် နေရာမှန်ကို ရောက်သွားပါမယ်
+    final leftPosition = baseLeft - widget.controller._currentReaderOffsetX;
+
+    return Positioned(
+      left: leftPosition,
+      top: topPosition,
+      width: renderWidth,
+      height: pageHeight,
+      child: Column(
+        children: [
+          Expanded(child: _animatedPageItem(index)),
+          _footerPageItem(index, renderWidth),
+        ],
       ),
-    ];
+    );
   }
 
   // ************** Pdf Footer Page Item *******************
@@ -451,11 +550,13 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer> {
   Widget _pageItem(int index) {
     final data = _loadedPagesCache[index];
     if (data != null) {
-      return Image.memory(
-        data,
-        fit: BoxFit.fill,
-        width: double.infinity, // အပြည့်ယူခိုင်းပါ
-        height: double.infinity,
+      return RepaintBoundary(
+        child: Image.memory(
+          data,
+          fit: BoxFit.fill,
+          width: double.infinity, // အပြည့်ယူခိုင်းပါ
+          height: double.infinity,
+        ),
       );
     }
 

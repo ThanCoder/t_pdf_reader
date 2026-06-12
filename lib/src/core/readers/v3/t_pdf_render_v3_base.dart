@@ -6,7 +6,6 @@ import 'package:t_pdf_reader/src/core/low_levels/backgrounds/pdf_background_docu
 import 'package:t_pdf_reader/src/core/low_levels/classes/types.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
 import 'dart:isolate';
-import 'package:dart_core_extensions/dart_core_extensions.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -51,7 +50,8 @@ class _TPdfReaderV3State extends State<TPdfReaderV3> {
 
   Future<void> init() async {
     try {
-      final timer = Stopwatch()..start();
+      widget.controller._stopWatch.start();
+
       setState(() {
         isLoading = true;
         error = null;
@@ -62,8 +62,6 @@ class _TPdfReaderV3State extends State<TPdfReaderV3> {
       sizedPages = await document.getSizedPage();
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        timer.stop();
-
         widget.controller._attachReader(totalPage: sizedPages.length);
       });
 
