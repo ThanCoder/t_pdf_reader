@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:t_pdf_reader/src/core/low_levels/backgrounds/pdf_background_document.dart';
 import 'package:t_pdf_reader/src/core/low_levels/classes/types.dart';
+import 'package:t_pdf_reader/src/core/readers/v3/default_ui/default_pdf_ui_util.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
 
 import 'package:flutter/foundation.dart';
@@ -12,7 +13,7 @@ import 'package:flutter/gestures.dart';
 
 part 't_pdf_controller_v3.dart';
 part 't_custom_pdf_viewer.dart';
-part 'custom_widgets.dart';
+part 'default_ui/custom_widgets.dart';
 part 'logic_mixins/viewer_layout_mixin.dart';
 part 'logic_mixins/viewer_cache_mixin.dart';
 part 'logic_mixins/viewer_scroll_animation_mixin.dart';

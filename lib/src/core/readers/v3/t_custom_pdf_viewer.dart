@@ -51,7 +51,8 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer>
   // ************ Event & Sliding Cache Control ***********
   final Map<int, bool> _visiablePages = {};
 
-  void _updateCurrentPageEvent(double viewportHeight, double screenWidth) {
+  @override
+  void updateCurrentPageEvent(double viewportHeight, double screenWidth) {
     if (pageOffsetRanges.isEmpty) return;
 
     double viewportTop = startScrollY;
@@ -129,16 +130,21 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer>
 
     widget.controller._userEvent.listen((event) {
       if (event is UserZoom) {
-        _applyZoom(event.zoom);
+        applyZoom(event.zoom);
       }
       if (event is UserJumpToPage) {
         _goToPage(event.page - 1);
       }
       if (event is UserSetOffsetX) {
-        _applyZoom(event.zoom, offsetX: event.offsetX);
+        applyZoom(event.zoom, offsetX: event.offsetX);
         widget.controller._notifyListeners();
       }
+      if (event is UserRequestToPdfViewerStateRefersh) {
+        if (!mounted) return;
+        setState(() {});
+      }
     });
+    // on loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.controller._stopWatch.stop();
       widget.controller._pdfReaderEventStreamController.add(
@@ -179,7 +185,7 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer>
     return LayoutBuilder(
       builder: (context, constraints) {
         buildLayout(constraints);
-        _updateCurrentPageEvent(constraints.maxHeight, constraints.maxWidth);
+        updateCurrentPageEvent(constraints.maxHeight, constraints.maxWidth);
 
         return mobileGestureListener(constraints);
       },
@@ -187,20 +193,6 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer>
   }
 
   // ************** Mobile Scroll Pointer Listener ************
-  @override
-  void applyZoom(double zoom) {
-    _applyZoom(zoom);
-  }
-
-  @override
-  void animateScroll(double velocity) {
-    viewerAnimateScroll(velocity);
-  }
-
-  @override
-  void scrollAnimationControllerStop() {
-    viewerAnimateScrollStop();
-  }
 
   // ************** Scroll Pointer && Keyboard Handler ************
 
@@ -244,26 +236,6 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer>
         },
       ),
     );
-    // return SizedBox(
-    //   width: pdfRenderWidth,
-    //   // Zoom သေးရင် အမြင့်ပဲ ကျုံ့မယ်
-    //   height: 40 * (currentZoom < 1 ? currentZoom : 1),
-    //   child: Container(
-    //     decoration: const BoxDecoration(color: Colors.blueGrey),
-    //     child: FittedBox(
-    //       // 🎯 အမြင့်ဘောင်ထဲဝင်အောင်ပဲ စာသားကို လိုက်သေးခိုင်းတာ၊ Width ကို မထိဘူး
-    //       fit: BoxFit.fitHeight,
-    //       child: Padding(
-    //         // Padding ကအစ အချိုးကျ သေးသွားမယ်
-    //         padding: const EdgeInsets.symmetric(vertical: 4.0),
-    //         child: Text(
-    //           'Page: ${index + 1}',
-    //           style: const TextStyle(color: Colors.white),
-    //         ),
-    //       ),
-    //     ),
-    //   ),
-    // );
   }
 
   // Animate Page Item
@@ -322,7 +294,8 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer>
 
   // ******************* Zoom ****************
 
-  void _applyZoom(double zoomValue, {double? offsetX}) {
+  @override
+  void applyZoom(double zoomValue, {double? offsetX}) {
     if (widget.controller._currentZoom != zoomValue) {
       widget.controller._currentZoom = zoomValue;
       widget.controller._pdfReaderEventStreamController.add(
@@ -357,10 +330,5 @@ class _TCustomPdfViewerState extends State<TCustomPdfViewer>
     _goToPageDelayTimer = Timer(Duration(milliseconds: 300), () {
       _isPageChanging = false;
     });
-  }
-
-  @override
-  void updateCurrentPageEvent(double screenHeight, double lastScreenWidth) {
-    _updateCurrentPageEvent(screenHeight, lastScreenWidth);
   }
 }

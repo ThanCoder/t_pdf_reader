@@ -69,12 +69,6 @@ class TPdfController extends ChangeNotifier {
     _pdfReaderEventStreamController.close();
   }
 
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-  }
-
   Stream<PdfOnLoaded> get onLoaded =>
       pdfReaderEvent.where((e) => e is PdfOnLoaded).cast<PdfOnLoaded>();
 

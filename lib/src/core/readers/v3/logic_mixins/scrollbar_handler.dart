@@ -16,12 +16,16 @@ mixin ScrollbarHandler on State<TCustomPdfViewer> {
     double scrollbarWidth = 10;
     double scrollbarRightPosition = 0;
     Widget scrollWidget = _defaultScrollbar;
+
     if (widget.controller._customScrollbar != null) {
-      final customScroll = widget.controller._customScrollbar!(context);
-      scrollWidget = customScroll.child;
+      final customScroll = widget.controller._customScrollbar!(
+        context,
+        widget.controller._currentPage,
+      );
       scrollbarWidth = customScroll.scrollbarWidth;
       scrollbarHeight = customScroll.scrollbarHeight;
       scrollbarRightPosition = customScroll.scrollbarRightPosition;
+      scrollWidget = customScroll.child;
     }
 
     final double maxScroll = totalHeight - screenHeight;
@@ -44,14 +48,17 @@ mixin ScrollbarHandler on State<TCustomPdfViewer> {
       height: scrollbarHeight,
       child: GestureDetector(
         onVerticalDragStart: (details) {
+          if (!widget.controller.isShowScrollbar) return;
           _isDragging = true;
           scrollbarDrapOffset = details.localPosition.dy;
         },
         onVerticalDragEnd: (details) {
+          if (!widget.controller.isShowScrollbar) return;
           _isDragging = false;
           setState(() {});
         },
         onVerticalDragUpdate: (details) {
+          if (!widget.controller.isShowScrollbar) return;
           setState(() {
             // 🎯 ပြင်ဆင်ချက် ၂: Drag Position ကို တွက်တဲ့အခါ globalPosition ထဲကနေ
             // နှိပ်ခဲ့တဲ့ Scrollbar ရဲ့ Offset ကို နှုတ်ပြီး တွက်ရင် ပိုပြီး Smooth ဖြစ်ပြီး မတုန်တော့ပါဘူး
@@ -78,6 +85,4 @@ mixin ScrollbarHandler on State<TCustomPdfViewer> {
       ),
     );
   }
-
-
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -34,7 +36,7 @@ class _ReaderState extends State<Reader> {
         print('Pdf Loaded Time: ${event.loadedElapsedTime.inMilliseconds} ms');
         // pdfController.jumpToPage(10);
         pdfController.setZoom(1.25);
-
+        if (!mounted) return;
         showTSnackBar(
           context,
           "Loaded Time: ${event.loadedElapsedTime.getAutoTimeLabel()}",
@@ -199,5 +201,4 @@ class _ReaderState extends State<Reader> {
       },
     );
   }
-
 }

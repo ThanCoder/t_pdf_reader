@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
@@ -29,7 +31,15 @@ class _ReaderV2State extends State<ReaderV2> {
   bool isDarkMode = false;
   bool isScaleEnable = false;
   bool isFullscreen = false;
-  final pdfController = TPdfControllerV3(showScrollbar: TPlatform.isDesktop);
+  final pdfController = TPdfControllerV3(
+    showScrollbar: TPlatform.isDesktop,
+    customPdfPageFooterWidget: (context, pageIndex) => TCustomPageFooterWidget(
+      basefooterHeight: 50,
+      child: Center(child: Text('Page: $pageIndex')),
+    ),
+    customScrollbar: (context, pageIndex) =>
+        TCustomScrollbarWidget.ui3(pageIndex),
+  );
 
   void init() {
     pdfController.pdfReaderEvent.listen((event) {
@@ -184,6 +194,22 @@ class _ReaderV2State extends State<ReaderV2> {
                     pdfController.isOffsetXLocked
                         ? Icons.lock
                         : Icons.lock_open,
+                  ),
+                ),
+              ),
+              // scrollbar
+              ListenableBuilder(
+                listenable: pdfController,
+                builder: (context, child) => IconButton(
+                  onPressed: () {
+                    pdfController.setShowScrollbar(
+                      !pdfController.isShowScrollbar,
+                    );
+                  },
+                  icon: Icon(
+                    pdfController.isShowScrollbar
+                        ? Icons.unfold_less
+                        : Icons.unfold_more_rounded,
                   ),
                 ),
               ),

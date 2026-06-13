@@ -6,17 +6,16 @@ mixin TouchZoomHandlerMixin on State<TCustomPdfViewer> {
   double get startScrollY;
   set startScrollY(double y);
 
-  void scrollAnimationControllerStop();
+  void viewerAnimateScrollStop();
   void applyZoom(double zoom);
   void buildLayout(BoxConstraints constraints);
-  void animateScroll(double velocity);
+  void viewerAnimateScroll(double velocity);
   Widget pointerListener(BoxConstraints constraints);
 
   Widget mobileGestureListener(BoxConstraints constraints) {
     return GestureDetector(
       onScaleStart: (details) {
-        scrollAnimationControllerStop();
-        // scrollAnimationController.stop();
+        viewerAnimateScrollStop();
         _baseZoom = currentZoom;
       },
       onScaleUpdate: (details) {
@@ -62,7 +61,7 @@ mixin TouchZoomHandlerMixin on State<TCustomPdfViewer> {
         //touch scroll က ပြောင်းပြန်ကြီး
         final velocity = -details.velocity.pixelsPerSecond.dy;
         if (velocity.abs() > 0) {
-          animateScroll(velocity);
+          viewerAnimateScroll(velocity);
         }
       },
       child: pointerListener(constraints),

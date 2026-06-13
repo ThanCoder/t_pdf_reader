@@ -13,5 +13,7 @@ class UserZoom extends UserEvent {
 class UserSetOffsetX extends UserEvent {
   final double offsetX;
   final double zoom;
-  UserSetOffsetX(this.offsetX,this.zoom);
+  UserSetOffsetX(this.offsetX, this.zoom);
 }
+
+class UserRequestToPdfViewerStateRefersh extends UserEvent {}

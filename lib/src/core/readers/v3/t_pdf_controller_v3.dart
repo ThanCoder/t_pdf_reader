@@ -1,6 +1,7 @@
 part of 't_pdf_render_v3_base.dart';
 
-typedef CustomScrollBar = TCustomScrollbarWidget Function(BuildContext context);
+typedef CustomScrollBar =
+    TCustomScrollbarWidget Function(BuildContext context, int pageIndex);
 typedef CustomLoader = Widget Function(BuildContext context);
 typedef CustomError = Widget Function(BuildContext context, String error);
 typedef CustomPdfPageFooterWidget =
@@ -27,6 +28,7 @@ class TPdfControllerV3 extends ChangeNotifier {
   bool _showScrollbar;
 
   TPdfControllerV3({
+    this._customScrollbar,
     this._currentReaderOffsetX = 0.0,
     this._isOffsetXLocked = true,
     this._isOffsetXAutoLockedEnable = true,
@@ -34,7 +36,6 @@ class TPdfControllerV3 extends ChangeNotifier {
     this._mouseScrollSensitivity = 1.0,
     this._touchDragSensitivity = 1.0,
     this._customPdfPageFooterWidget,
-    this._customScrollbar,
     this._customLoader,
     this._customError,
     this._currentPage = 0,
@@ -43,7 +44,7 @@ class TPdfControllerV3 extends ChangeNotifier {
     this._currentZoom = 1.0,
     this._loadCacheLength = 10,
   });
-
+  bool get isShowScrollbar => _showScrollbar;
   double get currentReaderOffsetX => _currentReaderOffsetX;
   bool get isOffsetXLocked => _isOffsetXLocked;
   bool get isOffsetXAutoLockedEnable => _isOffsetXAutoLockedEnable;
@@ -128,6 +129,7 @@ class TPdfControllerV3 extends ChangeNotifier {
   void setShowScrollbar(bool enable) {
     _showScrollbar = enable;
     notifyListeners();
+    _userEventStreamController.add(UserRequestToPdfViewerStateRefersh());
   }
 
   void setOffsetXAutoLockedEnable(bool enable) {
