@@ -223,6 +223,7 @@ Future<List<PdfSizedPage>> getPagesAsyncFileSpeedUp(
       calloc.free(widthPtr);
       calloc.free(heightPtr);
       dom.close();
+      pdf.FPDF_InitLibrary();
     }
 
     return list;

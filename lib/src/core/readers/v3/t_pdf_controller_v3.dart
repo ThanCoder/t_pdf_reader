@@ -24,13 +24,13 @@ class TPdfControllerV3 extends ChangeNotifier {
   final CustomPdfPageFooterWidget? _customPdfPageFooterWidget;
   final double _mouseScrollSensitivity;
   final double _touchDragSensitivity;
-  final bool _showScrollbar;
+  bool _showScrollbar;
 
   TPdfControllerV3({
     this._currentReaderOffsetX = 0.0,
     this._isOffsetXLocked = true,
     this._isOffsetXAutoLockedEnable = true,
-    this._showScrollbar = true,
+    this._showScrollbar = false,
     this._mouseScrollSensitivity = 1.0,
     this._touchDragSensitivity = 1.0,
     this._customPdfPageFooterWidget,
@@ -99,12 +99,17 @@ class TPdfControllerV3 extends ChangeNotifier {
   Stream<PdfZoomChanged> get onZoomChanged =>
       pdfReaderEvent.where((e) => e is PdfZoomChanged).cast<PdfZoomChanged>();
 
-  // void _notifyListeners() {
-  //   notifyListeners();
-  // }
+  void _notifyListeners() {
+    notifyListeners();
+  }
 
   void jumpToPage(int page) =>
       _userEventStreamController.add(UserJumpToPage(page));
+
+  /// Set Offset X or Pdf Screen Left-Right
+  void setOffsetX(double offsetX, double zoom) {
+    _userEventStreamController.add(UserSetOffsetX(offsetX, zoom));
+  }
 
   /// 1x မှ 4x အတွင်းပဲ ပေးမယ်
   void setZoom(double zoomLevel) {
@@ -117,6 +122,11 @@ class TPdfControllerV3 extends ChangeNotifier {
 
   void setOffsetXLocked(bool locked) {
     _isOffsetXLocked = locked;
+    notifyListeners();
+  }
+
+  void setShowScrollbar(bool enable) {
+    _showScrollbar = enable;
     notifyListeners();
   }
 

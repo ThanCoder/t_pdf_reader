@@ -29,14 +29,16 @@ class _ReaderV2State extends State<ReaderV2> {
   bool isDarkMode = false;
   bool isScaleEnable = false;
   bool isFullscreen = false;
-  final pdfController = TPdfControllerV3();
+  final pdfController = TPdfControllerV3(showScrollbar: TPlatform.isDesktop);
 
   void init() {
     pdfController.pdfReaderEvent.listen((event) {
       if (event is PdfOnLoaded) {
         print('Pdf Loaded Time: ${event.loadedElapsedTime.inMilliseconds} ms');
-        // pdfController.jumpToPage(10);
         // pdfController.setZoom(1.25);
+        // 37.83990478515625
+        // pdfController.jumpToPage(809);
+        // pdfController.setOffsetX(-125.8132934570312, 2.7);
 
         showTSnackBar(
           context,
@@ -44,8 +46,15 @@ class _ReaderV2State extends State<ReaderV2> {
           showCloseIcon: true,
         );
       }
-      if (event is PdfScreenSizeChanged) {
-        print('size changed-maxWidth: ${event.maxWidth}');
+      // if (event is PdfScreenSizeChanged) {
+      //   print('size changed-maxWidth: ${event.maxWidth}');
+      // }
+      if (event is PdfZoomChanged) {
+        print('zoom: ${pdfController.currentZoom}');
+      }
+      if (event is PdfScreenOffsetXChanged) {
+        print('dev user');
+        print('screen offset x: ${event.offsetX}');
       }
     });
   }

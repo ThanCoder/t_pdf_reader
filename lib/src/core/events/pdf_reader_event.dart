@@ -48,3 +48,8 @@ class PdfVisiablePageChanged extends PdfReaderEvent {
   final Map<int, bool> map;
   PdfVisiablePageChanged({required this.map});
 }
+
+class PdfScreenOffsetXChanged extends PdfReaderEvent {
+  final double offsetX;
+  PdfScreenOffsetXChanged(this.offsetX);
+}

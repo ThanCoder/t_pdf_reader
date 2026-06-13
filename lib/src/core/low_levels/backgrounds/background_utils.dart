@@ -88,6 +88,7 @@ void _pdfBackgroundWorker((SendPort, String, String?) args) async {
       // close
       if (sender.command == .closeWorker) {
         dom.close();
+        pdf.FPDF_InitLibrary();
       }
     }
   });

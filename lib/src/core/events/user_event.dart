@@ -9,3 +9,9 @@ class UserZoom extends UserEvent {
   final double zoom;
   UserZoom(this.zoom);
 }
+
+class UserSetOffsetX extends UserEvent {
+  final double offsetX;
+  final double zoom;
+  UserSetOffsetX(this.offsetX,this.zoom);
+}
