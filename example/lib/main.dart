@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:t_pdf_reader_example/reader.dart';
 import 'package:t_pdf_reader_example/reader_v2.dart';
 import 'package:than_pkg/than_pkg.dart';
 
@@ -80,7 +79,7 @@ class MyApp extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        Reader(path: '/storage/emulated/0/test.pdf'),
+                        ReaderV2(path: '/storage/emulated/0/test.pdf'),
                   ),
                 );
               },
@@ -92,7 +91,7 @@ class MyApp extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        Reader(path: '/storage/emulated/0/test2.pdf'),
+                        ReaderV2(path: '/storage/emulated/0/test2.pdf'),
                   ),
                 );
               },

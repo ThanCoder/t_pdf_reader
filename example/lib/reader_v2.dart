@@ -1,9 +1,7 @@
-// ignore_for_file: avoid_print, use_build_context_synchronously
+// ignore_for_file: unused_element, avoid_print, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
-import 'package:t_widgets/t_widgets.dart';
 import 'package:than_pkg/than_pkg.dart';
 
 class ReaderV2 extends StatefulWidget {
@@ -24,49 +22,49 @@ class _ReaderV2State extends State<ReaderV2> {
   @override
   void dispose() {
     ThanPkg.platform.toggleFullScreen(isFullScreen: false);
-    pdfController.dispose();
+    // pdfController.dispose();
     super.dispose();
   }
 
   bool isDarkMode = false;
   bool isScaleEnable = false;
   bool isFullscreen = false;
-  final pdfController = TPdfControllerV3(
-    showScrollbar: TPlatform.isDesktop,
-    customPdfPageFooterWidget: (context, pageIndex) => TCustomPageFooterWidget(
-      basefooterHeight: 50,
-      child: Center(child: Text('Page: $pageIndex')),
-    ),
-    customScrollbar: (context, pageIndex) =>
-        TCustomScrollbarWidget.ui3(pageIndex),
+  final pdfController = TPdfController(
+    // showScrollbar: TPlatform.isDesktop,
+    // customPdfPageFooterWidget: (context, pageIndex) => TCustomPageFooterWidget(
+    //   basefooterHeight: 50,
+    //   child: Center(child: Text('Page: $pageIndex')),
+    // ),
+    // customScrollbar: (context, pageIndex) =>
+    //     TCustomScrollbarWidget.ui3(pageIndex),
   );
 
   void init() {
-    pdfController.pdfReaderEvent.listen((event) {
-      if (event is PdfOnLoaded) {
-        print('Pdf Loaded Time: ${event.loadedElapsedTime.inMilliseconds} ms');
-        // pdfController.setZoom(1.25);
-        // 37.83990478515625
-        // pdfController.jumpToPage(809);
-        // pdfController.setOffsetX(-125.8132934570312, 2.7);
+    // pdfController.pdfReaderEvent.listen((event) {
+    //   if (event is PdfOnLoaded) {
+    //     print('Pdf Loaded Time: ${event.loadedElapsedTime.inMilliseconds} ms');
+    //     // pdfController.setZoom(1.25);
+    //     // 37.83990478515625
+    //     // pdfController.jumpToPage(809);
+    //     // pdfController.setOffsetX(-125.8132934570312, 2.7);
 
-        showTSnackBar(
-          context,
-          "Loaded Time: ${event.loadedElapsedTime.getAutoTimeLabel()}",
-          showCloseIcon: true,
-        );
-      }
-      // if (event is PdfScreenSizeChanged) {
-      //   print('size changed-maxWidth: ${event.maxWidth}');
-      // }
-      if (event is PdfZoomChanged) {
-        print('zoom: ${pdfController.currentZoom}');
-      }
-      if (event is PdfScreenOffsetXChanged) {
-        print('dev user');
-        print('screen offset x: ${event.offsetX}');
-      }
-    });
+    //     showTSnackBar(
+    //       context,
+    //       "Loaded Time: ${event.loadedElapsedTime.getAutoTimeLabel()}",
+    //       showCloseIcon: true,
+    //     );
+    //   }
+    //   // if (event is PdfScreenSizeChanged) {
+    //   //   print('size changed-maxWidth: ${event.maxWidth}');
+    //   // }
+    //   if (event is PdfZoomChanged) {
+    //     print('zoom: ${pdfController.currentZoom}');
+    //   }
+    //   if (event is PdfScreenOffsetXChanged) {
+    //     print('dev user');
+    //     print('screen offset x: ${event.offsetX}');
+    //   }
+    // });
   }
 
   @override
@@ -98,8 +96,8 @@ class _ReaderV2State extends State<ReaderV2> {
                       color: Colors.white,
                       width: double.infinity,
                       height: double.infinity,
-                      child: TPdfReaderV3(
-                        source: widget.path,
+                      child: TPdfReader(
+                        path: widget.path,
                         controller: pdfController,
                       ),
                     ),
@@ -125,22 +123,22 @@ class _ReaderV2State extends State<ReaderV2> {
             spacing: 6,
             children: [
               SizedBox(width: 10),
-              InkWell(
-                mouseCursor: SystemMouseCursors.click,
-                onTap: _showGoToPageDialog,
-                child: Padding(
-                  padding: const EdgeInsets.all(2.0),
-                  child: StreamBuilder(
-                    stream: pdfController.onPageChanged,
-                    builder: (context, asyncSnapshot) {
-                      return Text(
-                        '${pdfController.currentPage}/${pdfController.totalPages}',
-                        style: TextStyle(color: Colors.teal),
-                      );
-                    },
-                  ),
-                ),
-              ),
+              // InkWell(
+              //   mouseCursor: SystemMouseCursors.click,
+              //   onTap: _showGoToPageDialog,
+              //   child: Padding(
+              //     padding: const EdgeInsets.all(2.0),
+              //     child: StreamBuilder(
+              //       stream: pdfController.onPageChanged,
+              //       builder: (context, asyncSnapshot) {
+              //         return Text(
+              //           '${pdfController.currentPage}/${pdfController.totalPages}',
+              //           style: TextStyle(color: Colors.teal),
+              //         );
+              //       },
+              //     ),
+              //   ),
+              // ),
               IconButton(
                 onPressed: () {
                   setState(() {
@@ -149,26 +147,26 @@ class _ReaderV2State extends State<ReaderV2> {
                 },
                 icon: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
               ),
-              StreamBuilder(
-                stream: pdfController.onZoomChanged,
-                builder: (context, asyncSnapshot) {
-                  return Text(
-                    'Zoom: ${(pdfController.currentZoom * 100).toInt()}%',
-                  );
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.zoom_out),
-                onPressed: () => pdfController.setZoom(
-                  pdfController.currentZoom - 0.25,
-                ), // ၂၅% လျှော့မယ်
-              ),
-              IconButton(
-                icon: Icon(Icons.zoom_in),
-                onPressed: () => pdfController.setZoom(
-                  pdfController.currentZoom + 0.25,
-                ), // ၂၅% တိုးမယ်
-              ),
+              // StreamBuilder(
+              //   stream: pdfController.onZoomChanged,
+              //   builder: (context, asyncSnapshot) {
+              //     return Text(
+              //       'Zoom: ${(pdfController.currentZoom * 100).toInt()}%',
+              //     );
+              //   },
+              // ),
+              // IconButton(
+              //   icon: Icon(Icons.zoom_out),
+              //   onPressed: () => pdfController.setZoom(
+              //     pdfController.currentZoom - 0.25,
+              //   ), // ၂၅% လျှော့မယ်
+              // ),
+              // IconButton(
+              //   icon: Icon(Icons.zoom_in),
+              //   onPressed: () => pdfController.setZoom(
+              //     pdfController.currentZoom + 0.25,
+              //   ), // ၂၅% တိုးမယ်
+              // ),
               IconButton(
                 onPressed: () {
                   isFullscreen = !isFullscreen;
@@ -179,40 +177,40 @@ class _ReaderV2State extends State<ReaderV2> {
                   isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
                 ),
               ),
-              ListenableBuilder(
-                listenable: pdfController,
-                builder: (context, child) => IconButton(
-                  onPressed: () {
-                    pdfController.setOffsetXAutoLockedEnable(
-                      !pdfController.isOffsetXLocked,
-                    );
-                    pdfController.setOffsetXLocked(
-                      !pdfController.isOffsetXLocked,
-                    );
-                  },
-                  icon: Icon(
-                    pdfController.isOffsetXLocked
-                        ? Icons.lock
-                        : Icons.lock_open,
-                  ),
-                ),
-              ),
+              // ListenableBuilder(
+              //   listenable: pdfController,
+              //   builder: (context, child) => IconButton(
+              //     onPressed: () {
+              //       pdfController.setOffsetXAutoLockedEnable(
+              //         !pdfController.isOffsetXLocked,
+              //       );
+              //       pdfController.setOffsetXLocked(
+              //         !pdfController.isOffsetXLocked,
+              //       );
+              //     },
+              //     icon: Icon(
+              //       pdfController.isOffsetXLocked
+              //           ? Icons.lock
+              //           : Icons.lock_open,
+              //     ),
+              //   ),
+              // ),
               // scrollbar
-              ListenableBuilder(
-                listenable: pdfController,
-                builder: (context, child) => IconButton(
-                  onPressed: () {
-                    pdfController.setShowScrollbar(
-                      !pdfController.isShowScrollbar,
-                    );
-                  },
-                  icon: Icon(
-                    pdfController.isShowScrollbar
-                        ? Icons.unfold_less
-                        : Icons.unfold_more_rounded,
-                  ),
-                ),
-              ),
+              // ListenableBuilder(
+              //   listenable: pdfController,
+              //   builder: (context, child) => IconButton(
+              //     onPressed: () {
+              //       pdfController.setShowScrollbar(
+              //         !pdfController.isShowScrollbar,
+              //       );
+              //     },
+              //     icon: Icon(
+              //       pdfController.isShowScrollbar
+              //           ? Icons.unfold_less
+              //           : Icons.unfold_more_rounded,
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),
@@ -221,23 +219,23 @@ class _ReaderV2State extends State<ReaderV2> {
   );
 
   void _showGoToPageDialog() {
-    showTReanmeDialog(
-      context,
-      text: pdfController.currentPage.toString(),
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      textInputType: TextInputType.number,
-      submitText: 'Go To Page',
-      onCheckIsError: (text) {
-        final number = int.tryParse(text);
-        if (number == null) return 'Page Number is Required!';
-        if (number > pdfController.totalPages) {
-          return 'Page: `$number` > Total: `${pdfController.totalPages}`';
-        }
-        return null;
-      },
-      onSubmit: (text) {
-        pdfController.jumpToPage(int.parse(text));
-      },
-    );
+    //   showTReanmeDialog(
+    //     context,
+    //     text: pdfController.currentPage.toString(),
+    //     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+    //     textInputType: TextInputType.number,
+    //     submitText: 'Go To Page',
+    //     onCheckIsError: (text) {
+    //       final number = int.tryParse(text);
+    //       if (number == null) return 'Page Number is Required!';
+    //       if (number > pdfController.totalPages) {
+    //         return 'Page: `$number` > Total: `${pdfController.totalPages}`';
+    //       }
+    //       return null;
+    //     },
+    //     onSubmit: (text) {
+    //       pdfController.jumpToPage(int.parse(text));
+    //     },
+    //   );
   }
 }

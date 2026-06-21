@@ -1,34 +1,24 @@
 name: t_pdf_reader
-description: "A new Flutter plugin project."
+description: "pdf reader witten by 'than_pdf_engine' package."
 version: 0.0.1
 homepage: https://github.com/ThanCoder/t_pdf_reader.git
 repository: https://github.com/ThanCoder/t_pdf_reader.git
 
+publish_to: none # လောလောဆယ် public မလုပ်သေးဘူး
+
 environment:
   sdk: ^3.12.0
-  flutter: '>=3.3.0'
+  flutter: ">=3.3.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  plugin_platform_interface: ^2.0.2
-  pdfium_dart: ^0.2.4
-  ffi: ^2.2.0
-  image: ^4.9.1
-  visibility_detector: ^0.4.0+2
   dart_core_extensions: ^0.3.0
+  than_pdf_engine:
+    git: https://github.com/ThanCoder/than_pdf_engine.git
+    # path: /home/thancoder/projects/flutter_ffi_projects/than_pdf_engine
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-flutter:
-  plugin:
-    platforms:
-    # This plugin project was generated without specifying any
-    # platforms with the `--platform` argument. If you see the `some_platform` map below, remove it and
-    # then add platforms following the instruction here:
-    # https://flutter.dev/to/pubspec-plugin-platforms
-    # -------------------
-      some_platform:
-        pluginClass: somePluginClass
