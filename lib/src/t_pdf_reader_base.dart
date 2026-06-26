@@ -1,14 +1,20 @@
-// ignore_for_file: avoid_print, public_member_api_docs, sort_constructors_first
-import 'package:flutter/gestures.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:t_pdf_reader/src/reader/page_offset.dart';
-import 'package:t_pdf_reader/src/reader/reader_state.dart';
-import 'package:t_pdf_reader/src/reader/reader_state_controller.dart';
-import 'package:t_pdf_reader/src/reader/state_events.dart';
+import 'package:t_pdf_reader/src/events/pdf_events.dart';
+import 'package:t_pdf_reader/src/events/user_events.dart';
+import 'package:t_pdf_reader/src/logic_mixins/desktop_handler.dart';
+import 'package:t_pdf_reader/src/logic_mixins/mobile_handler.dart';
+import 'package:t_pdf_reader/src/logic_mixins/page_list_handler.dart';
+import 'package:t_pdf_reader/src/reader/reader_layout_engine.dart';
+import 'package:t_pdf_reader/src/state/reader_state.dart';
+import 'package:t_pdf_reader/src/events/state_events.dart';
 import 'package:than_pdf_engine/than_pdf_engine.dart';
 
 part 't_pdf_controller.dart';
 part 'reader/t_reader.dart';
+part 'state/reader_state_controller.dart';
+part 'logic_mixins/scrollbar_handler.dart';
 
 class TPdfReader extends StatefulWidget {
   final String path;

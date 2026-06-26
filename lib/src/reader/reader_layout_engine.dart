@@ -102,4 +102,36 @@ class ReaderLayoutEngine {
     }
     return high.clamp(0, offsets.length - 1);
   }
+
+  /// Screen ရဲ့ အလယ်တည့်တည့်မှာ ရောက်နေတဲ့ စာမျက်နှာ Index ကို ရှာဖွေခြင်း
+  static int getCurrentCenterPageIndex({
+    required List<PageOffset> allPageOffsets,
+    required double scrollOffset,
+    required double viewportHeight,
+  }) {
+    if (allPageOffsets.isEmpty) return 0;
+
+    // စခရင်ရဲ့ အလယ်ဗဟိုမှတ် (Center Line) နေရာကို တွက်ချက်ခြင်း
+    final double centerOffset = scrollOffset + (viewportHeight / 2);
+
+    int low = 0;
+    int high = allPageOffsets.length - 1;
+
+    while (low <= high) {
+      final mid = low + (high - low) ~/ 2;
+      final page = allPageOffsets[mid];
+
+      // အလယ်ဗဟိုမှတ်က ဒီစာမျက်နှာရဲ့ အစနဲ့ အဆုံးကြားထဲမှာ ရှိနေရင် အဲဒါ Current Page ပဲ
+      if (centerOffset >= page.startOffset && centerOffset <= page.endOffset) {
+        return page.pageIndex;
+      } else if (page.endOffset < centerOffset) {
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    // ရှာမတွေ့ရင် (ဥပမာ- bound ကျော်နေရင်) အနီးစပ်ဆုံး index ကို clamp လုပ်ပေးမယ်
+    return low.clamp(0, allPageOffsets.length - 1);
+  }
 }
