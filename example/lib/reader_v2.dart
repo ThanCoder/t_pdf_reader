@@ -47,9 +47,9 @@ class _ReaderV2State extends State<ReaderV2> {
       showTSnackBar(context, 'Loaded Time: ${event.elapsed.inMilliseconds} ms');
       //page: 11 - offsetX: -0.8081921947733832-zoom: 0.8124003868943545
       pdfController.jumpToPage(
-        883,
-        offsetX: -0.8081921947733832,
-        zoom: 0.8124003868943545,
+        300,
+        offsetX: -14.8081921947733832,
+        zoom: 2.8124003868943545,
       );
     });
     pdfController.onPageChanged.listen((event) {

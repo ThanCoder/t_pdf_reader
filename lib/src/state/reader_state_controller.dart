@@ -96,8 +96,8 @@ class ReaderStateController {
     _state = _state.copyWith(
       zoomFactor: newZoom,
       pageOffsets: updatedPageOffsets,
-      currentScrollOffset:
-          newScrollOffset, // <--- တွက်ချက်ပြီးသား Offset Y အသစ်
+      currentScrollOffset: newScrollOffset,
+      currentScrollOffsetX: 0,
     );
 
     // ၄။ ပြီးမှ မြင်ကွင်းထဲက စာမျက်နှာစာရင်းကို အသစ်ပြန်ဆောက်မယ်
