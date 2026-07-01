@@ -28,6 +28,9 @@ class _TReaderState extends State<TReader>
   ReaderState get state => stateController.state;
 
   @override
+  TPdfController get tPdfController => widget.controller;
+
+  @override
   PdfBackgroundWorker get pdfWorker => widget.pdfWorker;
   // animate
 

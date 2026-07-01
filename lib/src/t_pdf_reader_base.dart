@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:t_pdf_reader/src/default_widgets/scrollbar_widgets.dart';
 import 'package:t_pdf_reader/src/events/pdf_events.dart';
 import 'package:t_pdf_reader/src/events/user_events.dart';
 import 'package:t_pdf_reader/src/logic_mixins/desktop_handler.dart';
@@ -44,7 +45,7 @@ class _TPdfReaderState extends State<TPdfReader> {
     super.dispose();
   }
 
-  final pdfWorker = PdfBackgroundWorker.instance;
+  final pdfWorker = PdfBackgroundWorker.getInstance;
   List<PageSize> pageSizes = [];
   bool isLoading = false;
 
@@ -61,7 +62,7 @@ class _TPdfReaderState extends State<TPdfReader> {
         isLoading = false;
       });
     } catch (e) {
-      print(e);
+      debugPrint('[TPdfReader:init]: $e');
       if (!mounted) return;
       setState(() {
         isLoading = false;
@@ -72,6 +73,9 @@ class _TPdfReaderState extends State<TPdfReader> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
+      if (widget.controller.progressWidget != null) {
+        return Center(child: widget.controller.progressWidget!(context));
+      }
       return Center(child: CircularProgressIndicator.adaptive());
     }
     return TReader(

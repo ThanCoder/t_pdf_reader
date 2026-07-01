@@ -13,10 +13,9 @@ dependencies:
   t_pdf_reader:
     path: ../
 
-  than_pdf_engine:
-    git: https://github.com/ThanCoder/than_pdf_engine.git
-    # path: /home/thancoder/projects/flutter_ffi_projects/than_pdf_engine
   cupertino_icons: ^1.0.8
+  than_pdf_engine: ^0.0.1
+  pdfium_dart: ^0.2.5
   dart_core_extensions: ^0.4.0
   t_widgets: ^2.6.1
   than_pkg: ^5.0.0

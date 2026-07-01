@@ -6,6 +6,17 @@ class TPdfController {
   Stream<UserEvent> get _userStream => _userController.stream;
   Stream<PdfEvent> get pdfStream => _pdfController.stream;
 
+  final Widget Function(BuildContext context)? progressWidget;
+
+  ///defaultScrollbarNeon
+  ///
+  ///defaultScrollbarMinimal
+  ///
+  ///defaultScrollbar1
+  ///
+  final Widget Function(double thumbWidth, double thumbHeight)? scrollbarWidget;
+  TPdfController({this.progressWidget, this.scrollbarWidget});
+
   // state
   int _currentPage = 0;
   int _totalPage = 0;

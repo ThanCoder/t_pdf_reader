@@ -4,6 +4,7 @@ mixin ScrollbarHandler {
   BuildContext get context;
   ReaderState get state;
   ReaderStateController get stateController;
+  TPdfController get tPdfController;
 
   Widget scrollBar(BoxConstraints constraints) {
     final double thumbWidth = 30;
@@ -42,41 +43,12 @@ mixin ScrollbarHandler {
   }
 
   Widget scrollbarWidget(double thumbWidth, double thumbHeight) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.grabbing,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: thumbWidth,
-        height: thumbHeight,
-        decoration: BoxDecoration(
-          // Premium ဖြစ်တဲ့ Teal Gradient ကာလာ သုံးထားပါတယ်
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.teal.shade400, Colors.teal.shade700],
-          ),
-          borderRadius: BorderRadius.circular(10),
-          // အနောက်က စာသားတွေနဲ့ ထင်ထင်ရှားရှားဖြစ်အောင် Shadow အနည်းငယ် ထည့်ထားပါတယ်
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        // အလယ်မှာ လက်နဲ့ဆွဲရလွယ်အောင် အစောင်းစင်းလိုင်းလေး (Indicator) ထည့်ချင်ရင် ထည့်နိုင်ပါတယ်
-        child: Center(
-          child: Container(
-            width: 4,
-            height: 12,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
-      ),
+    if (tPdfController.scrollbarWidget != null) {
+      return tPdfController.scrollbarWidget!(thumbWidth,thumbHeight);
+    }
+    return defaultScrollbarNeon(
+      thumbWidth: thumbWidth,
+      thumbHeight: thumbHeight,
     );
   }
 
