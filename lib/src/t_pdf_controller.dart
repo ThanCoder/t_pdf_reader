@@ -15,7 +15,12 @@ class TPdfController {
   ///defaultScrollbar1
   ///
   final Widget Function(double thumbWidth, double thumbHeight)? scrollbarWidget;
-  TPdfController({this.progressWidget, this.scrollbarWidget});
+  final Widget Function(int page)? pageFooterWidget;
+  TPdfController({
+    this.progressWidget,
+    this.scrollbarWidget,
+    this.pageFooterWidget,
+  });
 
   // state
   int _currentPage = 0;

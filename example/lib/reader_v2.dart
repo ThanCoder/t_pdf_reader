@@ -39,6 +39,7 @@ class _ReaderV2State extends State<ReaderV2> {
     // ),
     // customScrollbar: (context, pageIndex) =>
     //     TCustomScrollbarWidget.ui3(pageIndex),
+    // pageFooterWidget: (page) => Text('I am Footer: $page'),
   );
 
   void init() {

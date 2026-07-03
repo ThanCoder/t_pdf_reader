@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/src/reader/page_list_item.dart';
 import 'package:t_pdf_reader/src/state/reader_state.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
-import 'package:than_pdf_engine/than_pdf_engine.dart';
 
 mixin PageListHandler {
   BuildContext get context;
   ReaderState get state;
   ReaderStateController get stateController;
   PdfBackgroundWorker get pdfWorker;
+  TPdfController get tPdfController;
 
   List<Widget> pageListItem(BoxConstraints constraints) {
     final list = <Widget>[];
@@ -28,7 +28,11 @@ mixin PageListHandler {
           left: leftPos,
           width: page.width,
           height: page.height,
-          child: PageListItem(page: page, pdfWorker: pdfWorker),
+          child: PageListItem(
+            page: page,
+            pdfWorker: pdfWorker,
+            controller: tPdfController,
+          ),
         ),
       );
     }

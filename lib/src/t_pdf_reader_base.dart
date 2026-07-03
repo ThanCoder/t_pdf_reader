@@ -48,13 +48,24 @@ class _TPdfReaderState extends State<TPdfReader> {
   final pdfWorker = PdfBackgroundWorker.getInstance;
   List<PageSize> pageSizes = [];
   bool isLoading = false;
+  String? error;
 
   void init() async {
     try {
       setState(() {
         isLoading = true;
       });
-      pageSizes = await PdfCore.getAllPageSizedList(widget.path);
+      final (list, error) = await PdfCore.getAllPageSizedList(widget.path);
+      pageSizes = list;
+      this.error = error;
+      if (error != null) {
+        // await pdfWorker.requestPageImageJpg(pageIndex, width: width, height: height)
+        if (!mounted) return;
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
       await pdfWorker.run(widget.path);
       // await pdfWorker.requestPageImageJpg(pageIndex, width: width, height: height)
       if (!mounted) return;
@@ -77,6 +88,11 @@ class _TPdfReaderState extends State<TPdfReader> {
         return Center(child: widget.controller.progressWidget!(context));
       }
       return Center(child: CircularProgressIndicator.adaptive());
+    }
+    if (error != null) {
+      return Center(
+        child: Text(error!, style: TextStyle(fontSize: 18, color: Colors.red)),
+      );
     }
     return TReader(
       pageSizes: pageSizes,

@@ -3,12 +3,18 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/src/reader/page_offset.dart';
-import 'package:than_pdf_engine/core/pdf_background_worker.dart';
+import 'package:t_pdf_reader/t_pdf_reader.dart';
 
 class PageListItem extends StatefulWidget {
   final PageOffset page;
   final PdfBackgroundWorker pdfWorker;
-  const PageListItem({super.key, required this.page, required this.pdfWorker});
+  final TPdfController controller;
+  const PageListItem({
+    super.key,
+    required this.page,
+    required this.pdfWorker,
+    required this.controller,
+  });
 
   @override
   State<PageListItem> createState() => _PageListItemState();
@@ -125,7 +131,16 @@ class _PageListItemState extends State<PageListItem> {
               },
             ),
           ),
-          Text('Page: ${widget.page.pageIndex + 1}'),
+          if (widget.controller.pageFooterWidget != null)
+            widget.controller.pageFooterWidget!(widget.page.pageIndex + 1)
+          else
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                'Page: ${widget.page.pageIndex + 1}',
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
         ],
       ),
     );

@@ -4,8 +4,6 @@ version: 0.0.1
 homepage: https://github.com/ThanCoder/t_pdf_reader.git
 repository: https://github.com/ThanCoder/t_pdf_reader.git
 
-publish_to: none # လောလောဆယ် public မလုပ်သေးဘူး
-
 environment:
   sdk: ^3.12.0
   flutter: ">=3.3.0"
@@ -14,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   dart_core_extensions: ^0.4.0
-  than_pdf_engine: ^0.0.1
+  than_pdf_engine: ^0.1.0
   pdfium_dart: ^0.2.5
 
 dev_dependencies:
