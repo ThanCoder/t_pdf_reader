@@ -52,6 +52,7 @@ class _TPdfReaderState extends State<TPdfReader> {
 
   void init() async {
     try {
+      widget.controller._pdfLoadedStopWatch.start();
       setState(() {
         isLoading = true;
       });

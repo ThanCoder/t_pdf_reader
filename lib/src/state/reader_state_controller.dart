@@ -8,13 +8,11 @@ class ReaderStateController {
   late List<PageSize> pageSizes = [];
   late TPdfController tPdfController;
   bool initialLoaded = false;
-  final stopWatch = Stopwatch();
 
   void setPageSizes(List<PageSize> pageSizes, TPdfController tController) {
     tPdfController = tController;
     this.pageSizes = pageSizes;
     _state = ReaderState(pageOffsets: []);
-    stopWatch.start();
   }
 
   void dispatch(StateEvent event) {
@@ -206,9 +204,9 @@ class ReaderStateController {
     _controller.add(_state);
     if (!initialLoaded) {
       initialLoaded = true;
-      stopWatch.stop();
+      tPdfController._pdfLoadedStopWatch.stop();
       tPdfController._totalPage = state.pageOffsets.length - 1;
-      tPdfController._pdfController.add(PdfLoaded(stopWatch.elapsed));
+      tPdfController._pdfController.add(PdfLoaded(tPdfController._pdfLoadedStopWatch.elapsed));
     }
   }
 

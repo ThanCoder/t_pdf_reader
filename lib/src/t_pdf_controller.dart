@@ -6,6 +6,8 @@ class TPdfController {
   Stream<UserEvent> get _userStream => _userController.stream;
   Stream<PdfEvent> get pdfStream => _pdfController.stream;
 
+  final _pdfLoadedStopWatch = Stopwatch();
+
   final Widget Function(BuildContext context)? progressWidget;
 
   ///defaultScrollbarNeon

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/src/reader/page_offset.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
+import 'package:than_pdf_engine/core/pdf_background_worker.dart';
 
 class PageListItem extends StatefulWidget {
   final PageOffset page;
@@ -121,9 +122,9 @@ class _PageListItemState extends State<PageListItem> {
     return SizedBox(
       width: widget.page.width,
       height: widget.page.height,
-      child: Column(
+      child: Stack(
         children: [
-          Expanded(
+          Positioned.fill(
             child: ValueListenableBuilder(
               valueListenable: imageDataChangeNotifier,
               builder: (context, value, child) {
@@ -131,18 +132,31 @@ class _PageListItemState extends State<PageListItem> {
               },
             ),
           ),
-          if (widget.controller.pageFooterWidget != null)
-            widget.controller.pageFooterWidget!(widget.page.pageIndex + 1)
-          else
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Page: ${widget.page.pageIndex + 1}',
-                style: TextStyle(color: Colors.black),
+
+          // footer
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: footerWidget,
               ),
             ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget get footerWidget {
+    if (widget.controller.pageFooterWidget != null) {
+      return widget.controller.pageFooterWidget!(widget.page.pageIndex + 1);
+    }
+    return Text(
+      'Page: ${widget.page.pageIndex + 1}',
+      style: TextStyle(color: Colors.black),
     );
   }
 

@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element, avoid_print, use_build_context_synchronously
 
+import 'package:dart_core_extensions/dart_core_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
@@ -44,8 +45,12 @@ class _ReaderV2State extends State<ReaderV2> {
 
   void init() {
     pdfController.onPdfLoaded.listen((event) {
-      print('Pdf Loaded Time: ${event.elapsed.inMilliseconds} ms');
-      showTSnackBar(context, 'Loaded Time: ${event.elapsed.inMilliseconds} ms');
+      print('Pdf Loaded Time: ${event.elapsed.autoTimeLabel()}');
+      showTSnackBar(
+        context,
+        'Loaded Time: ${event.elapsed.autoTimeLabel()}',
+        showCloseIcon: true,
+      );
       //page: 11 - offsetX: -0.8081921947733832-zoom: 0.8124003868943545
       // pdfController.jumpToPage(
       //   300,

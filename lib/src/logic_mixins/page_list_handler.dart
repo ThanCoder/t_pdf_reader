@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/src/reader/page_list_item.dart';
 import 'package:t_pdf_reader/src/state/reader_state.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
+import 'package:than_pdf_engine/core/pdf_background_worker.dart';
 
 mixin PageListHandler {
   BuildContext get context;
