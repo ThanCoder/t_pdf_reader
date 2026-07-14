@@ -77,6 +77,7 @@ class _PageListItemState extends State<PageListItem> {
     lowImage = null;
     highImage = null;
     _requestHighImageTimer?.cancel();
+    _stateSubscription?.cancel();
     super.dispose();
   }
 
