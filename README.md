@@ -32,6 +32,22 @@ TPdfReader(
 
 [Check out the implementation details here](https://github.com/ThanCoder/t_pdf_reader/blob/main/example/lib/reader_v2.dart)
 
+
+<details>
+  <summary>📸 Desktop Screenshot </summary>
+
+![Screenshot](https://github.com/ThanCoder/t_pdf_reader/blob/main/screenshot/2026-07-14-153352_691x601_scrot.png?raw=true)
+
+</details>
+
+<details>
+  <summary>📸 Mobile Screenshot </summary>
+
+<img src="https://github.com/ThanCoder/t_pdf_reader/blob/main/screenshot/Screenshot_2026-07-14-15-00-47-842_com.example.t_pdf_reader_example.jpg?raw=true" alt="Mobile Screen" width="300" />
+<img src="https://github.com/ThanCoder/t_pdf_reader/blob/main/screenshot/Screenshot_2026-07-14-15-00-52-171_com.example.t_pdf_reader_example.jpg?raw=true" alt="Mobile Screen" width="300" />
+
+</details>
+
 ### Custom Scroll Widgets
 
 ```dart
@@ -114,8 +130,6 @@ pdfController = TPdfController(
   <summary>Click Expand</summary>
   
 ```dart
-// ignore_for_file: unused_element, avoid_print, use_build_context_synchronously
-
 import 'package:dart_core_extensions/dart_core_extensions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -182,11 +196,11 @@ class _ReaderV2State extends State<ReaderV2> {
         showCloseIcon: true,
       );
       // page: 11 - offsetX: -0.8081921947733832-zoom: 0.8124003868943545
-      pdfController.jumpToPage(
-        300,
-        offsetX: -14.8081921947733832,
-        zoom: 2.8124003868943545,
-      );
+      // pdfController.jumpToPage(
+      //   300,
+      //   offsetX: -14.8081921947733832,
+      //   zoom: 2.8124003868943545,
+      // );
     });
     pdfController.onPageChanged.listen((event) {
       print(
@@ -352,3 +366,4 @@ class _ReaderV2State extends State<ReaderV2> {
 </details>
 
 
+```
