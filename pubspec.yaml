@@ -1,6 +1,6 @@
 name: t_pdf_reader
 description: "A performant Flutter PDF viewer capable of handling large PDF files smoothly. Built on than_pdf_engine, this package provides a clean foundation for custom PDF implementations, allowing users to build upon its core engine to add specific functionalities"
-version: 0.1.0
+version: 0.2.0
 homepage: https://github.com/ThanCoder/t_pdf_reader.git
 repository: https://github.com/ThanCoder/t_pdf_reader.git
 
