@@ -15,30 +15,31 @@ class TReader extends StatefulWidget {
   State<TReader> createState() => _TReaderState();
 }
 
-class _TReaderState extends State<TReader>
-    with
-        ScrollbarHandler,
-        PageListHandler,
-        DesktopHandler,
-        MobileHandler,
-        SingleTickerProviderStateMixin {
-  @override
+class _TReaderState extends State<TReader> with SingleTickerProviderStateMixin {
   final stateController = ReaderStateController();
-  @override
+
   ReaderState get state => stateController.state;
 
-  @override
-  TPdfController get tPdfController => widget.controller;
-
-  @override
-  PdfBackgroundWorker get pdfWorker => widget.pdfWorker;
-  // animate
+  late final IPdfPlatformController pdfPlatformController;
+  late final IPdfContext pdfContext;
 
   @override
   void initState() {
-    animateScrollListener(this);
     stateController.setPageSizes(widget.pageSizes, widget.controller);
     super.initState();
+    pdfContext = PdfContext(
+      pdfWorker: widget.pdfWorker,
+      stateController: stateController,
+      tPdfController: widget.controller,
+    );
+    pdfPlatformController = PdfPlatformController(context: pdfContext);
+    pdfPlatformController.init();
+    (pdfPlatformController.mobileListenerView as MobileListenerView)
+        .animateScrollListener(this);
+    init();
+  }
+
+  void init() {
     widget.controller._userStream.listen((event) {
       if (event is UserRequestZoomIn) {
         stateController.dispatch(ZoomChanged(state.zoomFactor + 0.1));
@@ -54,32 +55,80 @@ class _TReaderState extends State<TReader>
 
   @override
   void dispose() {
-    animateScrollControllerDispose();
+    pdfPlatformController.dispose();
+    (pdfPlatformController.mobileListenerView as MobileListenerView)
+        .animateScrollControllerDispose();
     stateController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        stateController.dispatch(LayoutChanged(constraints));
-        return desktopListener(constraints);
+    return StreamBuilder(
+      stream: widget.controller.onZoomChanged,
+      builder: (context, asyncSnapshot) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            stateController.dispatch(LayoutChanged(constraints));
+            // return desktopListener(constraints);
+            return pdfPlatformController.desktopListenerView.buildWithChild(
+              context,
+              constraints,
+              pdfPlatformController.mobileListenerView.buildWithChild(
+                context,
+                constraints,
+                listWidget(constraints),
+              ),
+            );
+          },
+        );
       },
     );
   }
 
-  @override
   Widget listWidget(BoxConstraints constraints) {
     return StreamBuilder(
       stream: stateController.stateStream.distinct(
         (prev, next) => prev.visiblePages == next.visiblePages,
       ),
-      builder: (context, snapshot) {
+      builder: (context, asyncSnapshot) {
         return Stack(
-          children: [...pageListItem(constraints), scrollBar(constraints)],
+          children: [
+            Stack(children: pageListItem(constraints)),
+            pdfPlatformController.scrollbarView.build(context, constraints),
+          ],
         );
       },
     );
+  }
+
+  List<Widget> pageListItem(BoxConstraints constraints) {
+    final list = <Widget>[];
+    // print(state.visiblePages);
+    // print('pages: ${state.visiblePages.map((e) => e.pageIndex).join(',')}');
+    for (var page in state.visiblePages) {
+      final topPos = page.startOffset - state.currentScrollOffset;
+
+      ///offset x
+      double leftPos =
+          ((constraints.maxWidth - page.width) / 2) -
+          state.currentScrollOffsetX;
+      list.add(
+        Positioned(
+          key: ValueKey('page_index_${page.pageIndex}'),
+          top: topPos,
+          left: leftPos,
+          width: page.width,
+          height: page.height,
+          child: PageListItem(
+            page: page,
+            pdfWorker: widget.pdfWorker,
+            controller: widget.controller,
+            readerStateController: stateController,
+          ),
+        ),
+      );
+    }
+    return list;
   }
 }

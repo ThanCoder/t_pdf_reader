@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/src/default_widgets/scrollbar_widgets.dart';
 import 'package:t_pdf_reader/src/events/pdf_events.dart';
 import 'package:t_pdf_reader/src/events/user_events.dart';
-import 'package:t_pdf_reader/src/logic_mixins/desktop_handler.dart';
-import 'package:t_pdf_reader/src/logic_mixins/mobile_handler.dart';
-import 'package:t_pdf_reader/src/logic_mixins/page_list_handler.dart';
+import 'package:t_pdf_reader/src/interfaces/i_pdf_platform_controller.dart';
+import 'package:t_pdf_reader/src/logic_controllers/mobile_listener_view.dart';
+import 'package:t_pdf_reader/src/logic_controllers/pdf_context.dart';
+import 'package:t_pdf_reader/src/logic_controllers/pdf_platform_controller.dart';
+import 'package:t_pdf_reader/src/reader/page_list_item.dart';
 import 'package:t_pdf_reader/src/reader/reader_layout_engine.dart';
 import 'package:t_pdf_reader/src/state/reader_state.dart';
 import 'package:t_pdf_reader/src/events/state_events.dart';
@@ -16,6 +18,7 @@ part 't_pdf_controller.dart';
 part 'reader/t_reader.dart';
 part 'state/reader_state_controller.dart';
 part 'logic_mixins/scrollbar_handler.dart';
+part 'logic_controllers/scrollbar_view.dart';
 
 class TPdfReader extends StatefulWidget {
   final String path;

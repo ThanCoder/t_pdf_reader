@@ -16,8 +16,32 @@ class ReaderV2 extends StatefulWidget {
 }
 
 class _ReaderV2State extends State<ReaderV2> {
+  late final TPdfController pdfController;
   @override
   void initState() {
+    pdfController = TPdfController(
+      scrollbarWidget: (thumbWidth, thumbHeight) => defaultScrollbarNeon(
+        thumbWidth: thumbWidth,
+        thumbHeight: thumbHeight,
+      ),
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent && event.logicalKey == .escape) {
+          if (isFullscreen) {
+            isFullscreen = false;
+            setState(() {});
+            ThanPkg.platform.toggleFullScreen(isFullScreen: isFullscreen);
+          }
+          return .handled;
+        }
+        if (event is KeyDownEvent && event.physicalKey == .keyF) {
+          isFullscreen = !isFullscreen;
+          setState(() {});
+          ThanPkg.platform.toggleFullScreen(isFullScreen: isFullscreen);
+          return .handled;
+        }
+        return .ignored;
+      },
+    );
     super.initState();
     init();
   }
@@ -32,16 +56,6 @@ class _ReaderV2State extends State<ReaderV2> {
   bool isDarkMode = false;
   bool isScaleEnable = false;
   bool isFullscreen = false;
-  final pdfController = TPdfController(
-    // showScrollbar: TPlatform.isDesktop,
-    // customPdfPageFooterWidget: (context, pageIndex) => TCustomPageFooterWidget(
-    //   basefooterHeight: 50,
-    //   child: Center(child: Text('Page: $pageIndex')),
-    // ),
-    // customScrollbar: (context, pageIndex) =>
-    //     TCustomScrollbarWidget.ui3(pageIndex),
-    // pageFooterWidget: (page) => Text('I am Footer: $page'),
-  );
 
   void init() {
     pdfController.onPdfLoaded.listen((event) {
@@ -51,7 +65,7 @@ class _ReaderV2State extends State<ReaderV2> {
         'Loaded Time: ${event.elapsed.autoTimeLabel()}',
         showCloseIcon: true,
       );
-      //page: 11 - offsetX: -0.8081921947733832-zoom: 0.8124003868943545
+      // page: 11 - offsetX: -0.8081921947733832-zoom: 0.8124003868943545
       // pdfController.jumpToPage(
       //   300,
       //   offsetX: -14.8081921947733832,
@@ -63,31 +77,6 @@ class _ReaderV2State extends State<ReaderV2> {
         'page: ${event.page} - offsetX: ${pdfController.currentOffsetX}-zoom: ${pdfController.currentZoom}',
       );
     });
-    // pdfController.pdfReaderEvent.listen((event) {
-    //   if (event is PdfOnLoaded) {
-    //     print('Pdf Loaded Time: ${event.loadedElapsedTime.inMilliseconds} ms');
-    //     // pdfController.setZoom(1.25);
-    //     // 37.83990478515625
-    //     // pdfController.jumpToPage(809);
-    //     // pdfController.setOffsetX(-125.8132934570312, 2.7);
-
-    //     showTSnackBar(
-    //       context,
-    //       "Loaded Time: ${event.loadedElapsedTime.getAutoTimeLabel()}",
-    //       showCloseIcon: true,
-    //     );
-    //   }
-    //   // if (event is PdfScreenSizeChanged) {
-    //   //   print('size changed-maxWidth: ${event.maxWidth}');
-    //   // }
-    //   if (event is PdfZoomChanged) {
-    //     print('zoom: ${pdfController.currentZoom}');
-    //   }
-    //   if (event is PdfScreenOffsetXChanged) {
-    //     print('dev user');
-    //     print('screen offset x: ${event.offsetX}');
-    //   }
-    // });
   }
 
   @override
@@ -199,24 +188,6 @@ class _ReaderV2State extends State<ReaderV2> {
                   isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
                 ),
               ),
-              // ListenableBuilder(
-              //   listenable: pdfController,
-              //   builder: (context, child) => IconButton(
-              //     onPressed: () {
-              //       pdfController.setOffsetXAutoLockedEnable(
-              //         !pdfController.isOffsetXLocked,
-              //       );
-              //       pdfController.setOffsetXLocked(
-              //         !pdfController.isOffsetXLocked,
-              //       );
-              //     },
-              //     icon: Icon(
-              //       pdfController.isOffsetXLocked
-              //           ? Icons.lock
-              //           : Icons.lock_open,
-              //     ),
-              //   ),
-              // ),
               // scrollbar
               ValueListenableBuilder(
                 valueListenable: pdfController.scrollbarNotifier,

@@ -33,6 +33,7 @@ mixin PageListHandler {
             page: page,
             pdfWorker: pdfWorker,
             controller: tPdfController,
+            readerStateController: stateController,
           ),
         ),
       );

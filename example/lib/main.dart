@@ -30,20 +30,22 @@ class MyApp extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ReaderV2(
-                      path: '/home/thancoder/Documents/10-pg-blank.pdf',
+                      path:
+                          '/home/thancoder/Documents/pdf/မပစ်ကြပါနဲ့-Book-1-3.pdf',
                     ),
                   ),
                 );
               },
-              child: Text('So Small Pdf'),
+              child: Text('မပစ်ကြပါနဲ့-Book-1-3'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        ReaderV2(path: '/home/thancoder/Documents/test.pdf'),
+                    builder: (context) => ReaderV2(
+                      path: '/home/thancoder/Documents/pdf/test.pdf',
+                    ),
                   ),
                 );
               },
@@ -54,8 +56,9 @@ class MyApp extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        ReaderV2(path: '/home/thancoder/Documents/test2.pdf'),
+                    builder: (context) => ReaderV2(
+                      path: '/home/thancoder/Documents/pdf/test2.pdf',
+                    ),
                   ),
                 );
               },
@@ -66,8 +69,9 @@ class MyApp extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        ReaderV2(path: '/home/thancoder/Documents/test3.pdf'),
+                    builder: (context) => ReaderV2(
+                      path: '/home/thancoder/Documents/pdf/test3.pdf',
+                    ),
                   ),
                 );
               },
@@ -108,7 +112,7 @@ class MyApp extends StatelessWidget {
             }
             // await TPdfCoreThumbnailer.extractImageAndSave(
             //   pageIndex: 1,
-            //   '/home/thancoder/Documents/test2.pdf',
+            //   '/home/thancoder/Documents/pdf/test2.pdf',
             //   savePath: 'out.png',
             //   overrideExistsImage: true,
             // );

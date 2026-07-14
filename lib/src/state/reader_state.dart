@@ -13,16 +13,18 @@ class ReaderState {
   final BoxConstraints? lastConstraints;
   final List<PageOffset> pageOffsets;
   final List<PageOffset> visiblePages;
+  final bool isScrolling;
   ReaderState({
     this.currentScrollOffset = 0,
     this.currentScrollOffsetX = 0,
     this.totalContentHeight = 0,
     this.minScale = 0.2,
     this.maxScale = 5,
-    this.zoomFactor = 0.7,
+    this.zoomFactor = 1,
     this.lastConstraints,
     required this.pageOffsets,
     this.visiblePages = const [],
+    this.isScrolling = false,
   });
 
   ReaderState copyWith({
@@ -35,6 +37,7 @@ class ReaderState {
     BoxConstraints? lastConstraints,
     List<PageOffset>? pageOffsets,
     List<PageOffset>? visiblePages,
+    bool? isScrolling,
   }) {
     return ReaderState(
       currentScrollOffset: currentScrollOffset ?? this.currentScrollOffset,
@@ -46,6 +49,7 @@ class ReaderState {
       lastConstraints: lastConstraints ?? this.lastConstraints,
       pageOffsets: pageOffsets ?? this.pageOffsets,
       visiblePages: visiblePages ?? this.visiblePages,
+      isScrolling: isScrolling ?? this.isScrolling,
     );
   }
 }

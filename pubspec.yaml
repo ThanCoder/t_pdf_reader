@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   dart_core_extensions: ^0.4.0
-  than_pdf_engine: ^0.2.1
+  than_pdf_engine: ^0.3.0
   pdfium_dart: ^0.2.5
 
 dev_dependencies:

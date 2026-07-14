@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:t_pdf_reader/src/events/state_events.dart';
-import 'package:t_pdf_reader/src/state/reader_state.dart';
-import 'package:t_pdf_reader/t_pdf_reader.dart';
+import 'package:t_pdf_reader/src/interfaces/i_pdf_platform_controller.dart';
 
-///### Need To Implements `SingleTickerProviderStateMixin`
-mixin MobileHandler {
-  BuildContext get context;
-  ReaderState get state;
-  ReaderStateController get stateController;
-  Widget listWidget(BoxConstraints constraints);
-  late AnimationController _animateScrollController;
-
+class MobileListenerView extends IListenerView {
   // Gesture စတင်ချိန်က တန်ဖိုးဟောင်းတွေကို ယာယီမှတ်ထားဖို့
   double _startZoom = 1.0;
   double _startOffsetX = 0.0;
   double _startOffsetY = 0.0;
   Offset? _startFocalPoint;
   double _currentScrollY = 0.0;
-  Widget mobileHandler(BoxConstraints constraints) {
+  late AnimationController _animateScrollController;
+  MobileListenerView({required super.pdfContext});
+
+  @override
+  Widget buildWithChild(
+    BuildContext context,
+    BoxConstraints constraints,
+    Widget child,
+  ) {
     return GestureDetector(
       onScaleStart: (details) {
         if (details.pointerCount == 1) {
@@ -28,11 +28,13 @@ mixin MobileHandler {
         }
         // လက် ၂ ချောင်း ထိလိုက်တဲ့အချိန် (Scale စလုပ်ချိန်)
         if (details.pointerCount == 2) {
-          _startZoom = state.zoomFactor; // နဂို State ထဲက Zoom ကို ယူမယ်
+          _startZoom =
+              pdfContext.state.zoomFactor; // နဂို State ထဲက Zoom ကို ယူမယ်
 
           // အရေးကြီးဆုံးအချက်: Gesture ရဲ့ အနှုတ်ကမ္ဘာတန်ဖိုးအတိုင်း ပြန်ပြောင်းပြီး မှတ်ရပါမယ်
-          _startOffsetX = -state.currentScrollOffsetX;
-          _startOffsetY = -state
+          _startOffsetX = -pdfContext.state.currentScrollOffsetX;
+          _startOffsetY = -pdfContext
+              .state
               .currentScrollOffset; // 0 မထားဘဲ လက်ရှိရောက်နေတဲ့နေရာကို မှတ်ခြင်း
 
           _startFocalPoint = details.localFocalPoint;
@@ -43,7 +45,9 @@ mixin MobileHandler {
           //scroll
           final dy = details.localFocalPoint.dy - _startFocalPoint!.dy;
 
-          stateController.dispatch(MouseScrollChanged(Offset(0, -dy)));
+          pdfContext.stateController.dispatch(
+            MouseScrollChanged(Offset(0, -dy)),
+          );
           _startFocalPoint = details.localFocalPoint;
         }
         // ၂။ လက်နှစ်ချောင်း (Scale/Zoom)
@@ -77,7 +81,9 @@ mixin MobileHandler {
           final zoom = newZoom;
 
           // ပြောင်းလဲမှုတန်ဖိုးများကို ပို့လွှတ်ခြင်း
-          stateController.dispatch(PdfScaleUpdated(offsetX, offsetY, zoom));
+          pdfContext.stateController.dispatch(
+            PdfScaleUpdated(offsetX, offsetY, zoom),
+          );
         }
       },
       onScaleEnd: (details) {
@@ -102,9 +108,8 @@ mixin MobileHandler {
           _animateScrollController.animateWith(simulation);
         }
       },
-      child: listWidget(constraints),
+      child: child,
     );
-  
   }
 
   //*************Scroll Animation*********** */
@@ -120,7 +125,7 @@ mixin MobileHandler {
       _currentScrollY = nextValue;
 
       // ရလာတဲ့ ပြောင်းလဲမှု Delta အတိုင်း dispatch လုပ်မယ်
-      stateController.dispatch(MouseScrollChanged(Offset(0, dy)));
+      pdfContext.stateController.dispatch(MouseScrollChanged(Offset(0, dy)));
     });
   }
 

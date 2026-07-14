@@ -18,10 +18,14 @@ class TPdfController {
   ///
   final Widget Function(double thumbWidth, double thumbHeight)? scrollbarWidget;
   final Widget Function(int page)? pageFooterWidget;
+  final KeyEventResult Function(FocusNode node, KeyEvent event)? onKeyEvent;
+  final double keyboardScrollSpeed;
   TPdfController({
     this.progressWidget,
     this.scrollbarWidget,
     this.pageFooterWidget,
+    this.onKeyEvent,
+    this.keyboardScrollSpeed = 50.0,
   });
 
   // state

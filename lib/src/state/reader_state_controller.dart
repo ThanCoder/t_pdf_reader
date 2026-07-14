@@ -16,6 +16,11 @@ class ReaderStateController {
   }
 
   void dispatch(StateEvent event) {
+    // Scroll Event နှစ်ခုလုံးကို မိအောင်ဖမ်းမယ်
+    if (event is MouseScrollChanged || event is MouseThumbScrollChanged) {
+      _setScrollingTrue();
+    }
+
     if (event is LayoutChanged) {
       _handleLayout(event);
     } else if (event is MouseScrollChanged) {
@@ -77,28 +82,21 @@ class ReaderStateController {
       zoomFactor: newZoom,
     );
 
-    // ၂။ ⚠️ အရေးကြီးဆုံးအပိုင်း - Focal Point ကို ဗဟိုပြုပြီး Scroll Offset Y ကို ပြန်တွက်ခြင်း
     final double oldScrollOffset = _state.currentScrollOffset;
-    final double focalY =
-        _state.lastConstraints!.maxWidth /
-        2; // လက်ရှိလက်ဗဟိုချက် (ဥပမာ- Screen ရဲ့ အလယ်တည့်တည့်ဆိုရင် screenHeight / 2)
+    final double focalY = _state.lastConstraints!.maxWidth / 2;
 
-    // ပုံသေနည်း- Zoom ချဲ့လိုက်လို့ ရှည်ထွက်သွားမယ့်အကွာအဝေးကို အချိုးကျ ပြန်တွက်တာ ဖြစ်ပါတယ်
     double newScrollOffset =
         ((oldScrollOffset + focalY) * (newZoom / oldZoom)) - focalY;
 
     // Scroll Offset က အနှုတ်တန်ဖိုး ဖြစ်မသွားအောင် ထိန်းမယ်
     if (newScrollOffset < 0) newScrollOffset = 0;
 
-    // ၃။ State ထဲမှာ ညှိပြီးသား currentScrollOffset ရော၊ Zoom ရော၊ Offsets ရော အကုန် Update လုပ်မယ်
     _state = _state.copyWith(
       zoomFactor: newZoom,
       pageOffsets: updatedPageOffsets,
       currentScrollOffset: newScrollOffset,
       currentScrollOffsetX: 0,
     );
-
-    // ၄။ ပြီးမှ မြင်ကွင်းထဲက စာမျက်နှာစာရင်းကို အသစ်ပြန်ဆောက်မယ်
     _buildVisiblePagesList();
   }
 
@@ -184,33 +182,66 @@ class ReaderStateController {
       zoomFactor: _state.zoomFactor,
     );
 
-    // ၂။ 🌟 အခုအသစ်ရေးထားတဲ့ Logic - Center ကျနေတဲ့ စာမျက်နှာ Index တစ်ခုတည်းကိုပဲ ရှာမယ်
     final viewportHeight = _state.lastConstraints!.maxHeight;
     final int currentPageIndex = ReaderLayoutEngine.getCurrentCenterPageIndex(
       allPageOffsets: _state.pageOffsets,
       scrollOffset: _state.currentScrollOffset,
       viewportHeight: viewportHeight,
     );
-    // set pdf controller state
-    tPdfController._currentPage = currentPageIndex + 1;
-    tPdfController._currentZoom = state.zoomFactor;
-    tPdfController._currentOffsetX = state.currentScrollOffsetX;
-    //send event
-    tPdfController._pdfController.add(PdfPageChanged(currentPageIndex));
-    tPdfController._pdfController.add(PdfZoomChanged(state.zoomFactor));
+
+    final int newPageNumber = currentPageIndex + 1;
+
+    // 🌟 ၁။ Page တကယ်ပြောင်းမှသာ Event လွှတ်မယ်
+    if (tPdfController._currentPage != newPageNumber) {
+      tPdfController._currentPage = newPageNumber;
+      tPdfController._pdfController.add(PdfPageChanged(currentPageIndex));
+    }
+
+    // 🌟 ၂။ Zoom Factor တကယ်ပြောင်းမှသာ Event လွှတ်မယ် (အရေးကြီးဆုံးအချက်)
+    if (tPdfController._currentZoom != state.zoomFactor) {
+      tPdfController._currentZoom = state.zoomFactor;
+      tPdfController._pdfController.add(PdfZoomChanged(state.zoomFactor));
+    }
+
+    // 🌟 ၃။ Offset X တကယ်ပြောင်းမှသာ update လုပ်မယ်
+    if (tPdfController._currentOffsetX != state.currentScrollOffsetX) {
+      tPdfController._currentOffsetX = state.currentScrollOffsetX;
+    }
 
     // State ကို အပြီးသတ် Update လုပ်ပြီး Stream ထဲသို့ ပို့လွှတ် (emit) သည်
     _state = _state.copyWith(visiblePages: visible);
     _controller.add(_state);
+
     if (!initialLoaded) {
       initialLoaded = true;
       tPdfController._pdfLoadedStopWatch.stop();
-      tPdfController._totalPage = state.pageOffsets.length - 1;
-      tPdfController._pdfController.add(PdfLoaded(tPdfController._pdfLoadedStopWatch.elapsed));
+      tPdfController._totalPage = state.pageOffsets.length;
+      tPdfController._pdfController.add(
+        PdfLoaded(tPdfController._pdfLoadedStopWatch.elapsed),
+      );
     }
   }
 
+  Timer? _scrollEndTimer;
+  void _setScrollingTrue() {
+    // Scroll စဆွဲပြီဆိုရင် အရင် timer ဟောင်းကို ဖျက်မယ်
+    _scrollEndTimer?.cancel();
+
+    // အကယ်၍ လက်ရှိ state က false ဖြစ်နေရင် true ပြောင်းပြီး stream ထဲ ထည့်ပေးမယ်
+    if (!_state.isScrolling) {
+      _state = _state.copyWith(isScrolling: true);
+      _controller.add(_state);
+    }
+
+    // Scroll ဆွဲတာ ရပ်သွားပြီး 400ms ကြာရင် isScrolling ကို false ပြန်ပြောင်းခိုင်းမယ်
+    _scrollEndTimer = Timer(const Duration(milliseconds: 400), () {
+      _state = _state.copyWith(isScrolling: false);
+      _controller.add(_state); // UI ကိုအလင်းပြဖို့ stream ထဲ ထည့်မယ်
+    });
+  }
+
   void dispose() {
+    _scrollEndTimer?.cancel();
     _controller.close();
   }
 }
