@@ -364,6 +364,3 @@ class _ReaderV2State extends State<ReaderV2> {
 ```
 
 </details>
-
-
-```
