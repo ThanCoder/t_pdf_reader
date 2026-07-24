@@ -14,11 +14,13 @@ dependencies:
     path: ../
 
   cupertino_icons: ^1.0.8
-  than_pdf_engine: ^0.3.0
+
+  than_pdf_engine: ^0.4.0
   pdfium_dart: ^0.2.5
   dart_core_extensions: ^0.4.0
   t_widgets: ^2.6.1
   than_pkg: ^5.0.0
+  desktop_drop: ^0.7.1
 
 dev_dependencies:
   integration_test:

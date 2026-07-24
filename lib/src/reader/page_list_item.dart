@@ -30,15 +30,13 @@ class _PageListItemState extends State<PageListItem> {
   Timer? _requestHighImageTimer;
   final imageDataChangeNotifier = ValueNotifier(1);
   StreamSubscription? _stateSubscription; // 💡 Stream ကို နားထောင်ဖို့
+  StreamSubscription? _zoomSubscription; // 💡 Stream ကို နားထောင်ဖို့
   bool _isReaderScrolling = false;
 
   @override
   void initState() {
     requestLowImage();
     super.initState();
-    // 💡 Main State Stream ကို နားထောင်ပြီး controller ရဲ့ scrolling state ကို စောင့်ကြည့်မယ်
-    // မင်းရဲ့ တကယ့် Code အရ stateStream ကို 'widget.controller' ကနေရရ၊ 'stateController' ကနေရရ ရတဲ့နေရာကနေ လှမ်းယူပါ
-    // ဥပမာ - widget.controller.stateStream (သို့မဟုတ်) ရွေးချယ်ထားတဲ့ သင့်တော်ရာ stream
     _stateSubscription = widget.readerStateController.stateStream
         .map((s) => s.isScrolling)
         .distinct()
@@ -48,16 +46,29 @@ class _PageListItemState extends State<PageListItem> {
           if (!isScrolling && highImage == null) {
             // 💡 Scroll လည်း ရပ်သွားပြီ၊ High Image လည်း မရှိသေးဘူးဆိုရင် တောင်းခိုင်းမယ်
             _requestHighImageTimer?.cancel();
-            _requestHighImageTimer = Timer(
-              const Duration(milliseconds: 200),
-              () {
-                requestHighImage();
-              },
-            );
+            _requestHighImageTimer = Timer(const Duration(milliseconds: 200), () {
+              requestHighImage();
+              // print(
+              //   '[_stateSubscription:requestHighImage]: `${widget.page.pageIndex + 1}`',
+              // );
+            });
           } else if (isScrolling) {
             // 💡 Scroll ဆွဲနေတုန်းဆိုရင် တောင်းဖို့ ပြင်ထားတဲ့ timer တွေကို လှမ်းဖျက်ပစ်မယ်
             _requestHighImageTimer?.cancel();
           }
+        });
+    _zoomSubscription = widget
+        .readerStateController
+        .tPdfController
+        .onZoomChanged
+        .listen((event) {
+          _requestHighImageTimer?.cancel();
+          _requestHighImageTimer = Timer(const Duration(milliseconds: 200), () {
+            requestHighImage();
+            // print(
+            //   '[_zoomSubscription:requestHighImage]: `${widget.page.pageIndex + 1}`',
+            // );
+          });
         });
   }
 
@@ -78,6 +89,7 @@ class _PageListItemState extends State<PageListItem> {
     highImage = null;
     _requestHighImageTimer?.cancel();
     _stateSubscription?.cancel();
+    _zoomSubscription?.cancel();
     super.dispose();
   }
 
@@ -88,11 +100,12 @@ class _PageListItemState extends State<PageListItem> {
         isLoading = true;
       });
 
-      final res = await widget.pdfWorker.requestPageImageJpg(
+      final res = await widget.pdfWorker.requestPageImage(
         widget.page.pageIndex,
         width: widget.page.width,
         height: widget.page.height,
         quality: 20,
+        type: .jpg,
       );
       if (res != null) {
         lowImage = Uint8List.fromList(res.trans.materialize().asUint8List());
@@ -123,11 +136,12 @@ class _PageListItemState extends State<PageListItem> {
       if (_isReaderScrolling || isLoading || highImage != null) return;
       isLoading = true;
 
-      final res = await widget.pdfWorker.requestPageImageJpg(
+      final res = await widget.pdfWorker.requestPageImage(
         widget.page.pageIndex,
         width: widget.page.width,
         height: widget.page.height,
         quality: 100,
+        type: widget.controller.requestRenderHighQualityImageType,
       );
       if (res != null) {
         highImage = Uint8List.fromList(res.trans.materialize().asUint8List());

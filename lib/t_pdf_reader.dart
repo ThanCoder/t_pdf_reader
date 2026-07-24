@@ -4,3 +4,4 @@ export 'src/events/pdf_events.dart';
 export 'src/events/user_events.dart';
 
 export 'package:than_pdf_engine/core/pdf_core.dart';
+export 'package:than_pdf_engine/core/pdf_thumbnail_generator.dart';

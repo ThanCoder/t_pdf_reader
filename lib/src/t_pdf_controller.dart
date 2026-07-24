@@ -20,12 +20,14 @@ class TPdfController {
   final Widget Function(int page)? pageFooterWidget;
   final KeyEventResult Function(FocusNode node, KeyEvent event)? onKeyEvent;
   final double keyboardScrollSpeed;
+  final PdfWorkerRequestImageType requestRenderHighQualityImageType;
   TPdfController({
     this.progressWidget,
     this.scrollbarWidget,
     this.pageFooterWidget,
     this.onKeyEvent,
     this.keyboardScrollSpeed = 50.0,
+    this.requestRenderHighQualityImageType = .png,
   });
 
   // state

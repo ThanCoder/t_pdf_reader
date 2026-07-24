@@ -72,11 +72,11 @@ class _ReaderV2State extends State<ReaderV2> {
       //   zoom: 2.8124003868943545,
       // );
     });
-    pdfController.onPageChanged.listen((event) {
-      print(
-        'page: ${event.page} - offsetX: ${pdfController.currentOffsetX}-zoom: ${pdfController.currentZoom}',
-      );
-    });
+    // pdfController.onPageChanged.listen((event) {
+    //   print(
+    //     'page: ${event.page} - offsetX: ${pdfController.currentOffsetX}-zoom: ${pdfController.currentZoom}',
+    //   );
+    // });
   }
 
   @override

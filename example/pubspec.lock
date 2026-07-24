@@ -89,6 +89,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.0"
+  desktop_drop:
+    dependency: "direct main"
+    description:
+      name: desktop_drop
+      sha256: aa1e797255bfbc76f9eb5aa4f61e5b68dbf69962ab1be6495816d2f251bc0d1f
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.1"
   fake_async:
     dependency: transitive
     description:
@@ -490,7 +498,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.2.0"
   t_widgets:
     dependency: "direct main"
     description:
@@ -519,10 +527,10 @@ packages:
     dependency: "direct main"
     description:
       name: than_pdf_engine
-      sha256: b91b6394315b59fe9303296ae511d3166e2ea9c4a30e98c8367588bd48c2dba3
+      sha256: "0b47bcf67a134c4ab7fe144a443cb69fe8af527e3c1bf8e1035cf033b88d3903"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.0"
+    version: "0.4.0"
   than_pkg:
     dependency: "direct main"
     description:
@@ -547,6 +555,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  universal_platform:
+    dependency: transitive
+    description:
+      name: universal_platform
+      sha256: "64e16458a0ea9b99260ceb5467a214c1f298d647c659af1bff6d3bf82536b1ec"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   vector_math:
     dependency: transitive
     description:

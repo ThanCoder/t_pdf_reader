@@ -1,4 +1,7 @@
-# 0.2.0
+# 0.3.0
++ Changed `Update Engine`
+
+## 0.2.0
 
 - Added Event `Keyboard` -> `KeyDown`,`KeyUp`
 - Added `TPdfController:keyboardScrollSpeed` - Property.
