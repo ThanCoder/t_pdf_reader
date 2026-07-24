@@ -53,7 +53,7 @@ class _ReaderV2State extends State<ReaderV2> {
     super.dispose();
   }
 
-  bool isDarkMode = false;
+  bool isDarkMode = true;
   bool isScaleEnable = false;
   bool isFullscreen = false;
 
@@ -66,11 +66,7 @@ class _ReaderV2State extends State<ReaderV2> {
         showCloseIcon: true,
       );
       // page: 11 - offsetX: -0.8081921947733832-zoom: 0.8124003868943545
-      // pdfController.jumpToPage(
-      //   300,
-      //   offsetX: -14.8081921947733832,
-      //   zoom: 2.8124003868943545,
-      // );
+      // pdfController.jumpToPage(13227, offsetX: 0, zoom: 1);
     });
     // pdfController.onPageChanged.listen((event) {
     //   print(

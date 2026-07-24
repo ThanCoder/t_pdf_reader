@@ -11,6 +11,7 @@ class PageListItem extends StatefulWidget {
   final PdfBackgroundWorker pdfWorker;
   final TPdfController controller;
   final ReaderStateController readerStateController;
+
   const PageListItem({
     super.key,
     required this.page,
@@ -26,17 +27,23 @@ class PageListItem extends StatefulWidget {
 class _PageListItemState extends State<PageListItem> {
   Uint8List? lowImage;
   Uint8List? highImage;
-  bool isLoading = false;
+
+  // 💡 Loading state များကို သီးခြားခွဲထုတ်လိုက်ပါ
+  bool isLoadingLow = false;
+  bool isLoadingHigh = false;
+
   Timer? _requestHighImageTimer;
-  final imageDataChangeNotifier = ValueNotifier(1);
-  StreamSubscription? _stateSubscription; // 💡 Stream ကို နားထောင်ဖို့
-  StreamSubscription? _zoomSubscription; // 💡 Stream ကို နားထောင်ဖို့
+  final imageDataChangeNotifier = ValueNotifier<int>(1);
+
+  StreamSubscription? _stateSubscription;
   bool _isReaderScrolling = false;
 
   @override
   void initState() {
-    requestLowImage();
+    _isReaderScrolling = widget.readerStateController.state.isScrolling;
+
     super.initState();
+
     _stateSubscription = widget.readerStateController.stateStream
         .map((s) => s.isScrolling)
         .distinct()
@@ -44,32 +51,19 @@ class _PageListItemState extends State<PageListItem> {
           _isReaderScrolling = isScrolling;
 
           if (!isScrolling && highImage == null) {
-            // 💡 Scroll လည်း ရပ်သွားပြီ၊ High Image လည်း မရှိသေးဘူးဆိုရင် တောင်းခိုင်းမယ်
             _requestHighImageTimer?.cancel();
-            _requestHighImageTimer = Timer(const Duration(milliseconds: 200), () {
-              requestHighImage();
-              // print(
-              //   '[_stateSubscription:requestHighImage]: `${widget.page.pageIndex + 1}`',
-              // );
-            });
+            _requestHighImageTimer = Timer(
+              const Duration(milliseconds: 200),
+              () {
+                requestHighImage();
+              },
+            );
           } else if (isScrolling) {
-            // 💡 Scroll ဆွဲနေတုန်းဆိုရင် တောင်းဖို့ ပြင်ထားတဲ့ timer တွေကို လှမ်းဖျက်ပစ်မယ်
             _requestHighImageTimer?.cancel();
           }
         });
-    _zoomSubscription = widget
-        .readerStateController
-        .tPdfController
-        .onZoomChanged
-        .listen((event) {
-          _requestHighImageTimer?.cancel();
-          _requestHighImageTimer = Timer(const Duration(milliseconds: 200), () {
-            requestHighImage();
-            // print(
-            //   '[_zoomSubscription:requestHighImage]: `${widget.page.pageIndex + 1}`',
-            // );
-          });
-        });
+
+    requestLowImage();
   }
 
   @override
@@ -85,56 +79,61 @@ class _PageListItemState extends State<PageListItem> {
 
   @override
   void dispose() {
-    lowImage = null;
-    highImage = null;
+    // 💡 Memory leak မဖြစ်အောင် ValueNotifier ကိုပါ dispose လုပ်ပေးရပါမယ်
+    imageDataChangeNotifier.dispose();
     _requestHighImageTimer?.cancel();
     _stateSubscription?.cancel();
-    _zoomSubscription?.cancel();
+    lowImage = null;
+    highImage = null;
     super.dispose();
   }
 
   void requestLowImage() async {
     try {
-      if (isLoading || lowImage != null) return;
-      setState(() {
-        isLoading = true;
-      });
+      if (isLoadingLow || lowImage != null) return;
+      if (mounted) {
+        setState(() {
+          isLoadingLow = true;
+        });
+      }
 
       final res = await widget.pdfWorker.requestPageImage(
         widget.page.pageIndex,
         width: widget.page.width,
         height: widget.page.height,
         quality: 20,
-        type: .jpg,
+        type: .jpg, // 💡 `.jpg` မှ `ImageType.jpg` သို့ ပြင်ဆင်ထားသည်
       );
+
+      if (!mounted) return;
+
       if (res != null) {
         lowImage = Uint8List.fromList(res.trans.materialize().asUint8List());
       }
-      if (!mounted) return;
-      setState(() {
-        isLoading = false;
-      });
 
-      // if (highImage == null) {
-      //   _requestHighImageTimer?.cancel();
-      //   _requestHighImageTimer = Timer(Duration(milliseconds: 300), () {
-      //     requestHighImage();
-      //   });
-      // }
+      setState(() {
+        isLoadingLow = false;
+      });
+      // 💡 Low Image ရသွားပြီဆိုတာနဲ့ Scroll မလုပ်နေဘူးဆိုရင် High Image ကို တောင်းခိုင်းမယ်
+      if (highImage == null && !_isReaderScrolling) {
+        _requestHighImageTimer?.cancel();
+        _requestHighImageTimer = Timer(const Duration(milliseconds: 200), () {
+          requestHighImage();
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        isLoading = false;
+        isLoadingLow = false;
       });
-
       debugPrint('[requestLowImage]: $e');
     }
   }
 
   void requestHighImage() async {
     try {
-      if (_isReaderScrolling || isLoading || highImage != null) return;
-      isLoading = true;
+      if (_isReaderScrolling || isLoadingHigh || highImage != null) return;
+      isLoadingHigh = true;
 
       final res = await widget.pdfWorker.requestPageImage(
         widget.page.pageIndex,
@@ -143,18 +142,18 @@ class _PageListItemState extends State<PageListItem> {
         quality: 100,
         type: widget.controller.requestRenderHighQualityImageType,
       );
+
+      if (!mounted) return; // 💡 Component unmount ဖြစ်သွားပါက ဆက်မလုပ်စေရန်
+
       if (res != null) {
         highImage = Uint8List.fromList(res.trans.materialize().asUint8List());
       }
-      if (!mounted) return;
-      isLoading = false;
+
+      isLoadingHigh = false;
       imageDataChangeNotifier.value += 1;
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        isLoading = false;
-      });
-
+      isLoadingHigh = false;
       debugPrint('[requestHighImage]: $e');
     }
   }
@@ -167,7 +166,7 @@ class _PageListItemState extends State<PageListItem> {
       child: Stack(
         children: [
           Positioned.fill(
-            child: ValueListenableBuilder(
+            child: ValueListenableBuilder<int>(
               valueListenable: imageDataChangeNotifier,
               builder: (context, value, child) {
                 return imageWidget;
@@ -198,7 +197,7 @@ class _PageListItemState extends State<PageListItem> {
     }
     return Text(
       'Page: ${widget.page.pageIndex + 1}',
-      style: TextStyle(color: Colors.black),
+      style: const TextStyle(color: Colors.black),
     );
   }
 
