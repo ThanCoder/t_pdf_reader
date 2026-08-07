@@ -59,10 +59,10 @@ class _ReaderV2State extends State<ReaderV2> {
 
   void init() {
     pdfController.onPdfLoaded.listen((event) {
-      print('Pdf Loaded Time: ${event.elapsed.autoTimeLabel()}');
+      print('Pdf Loaded Time: ${event.elapsed.formatTimeLable()}');
       showTSnackBar(
         context,
-        'Loaded Time: ${event.elapsed.autoTimeLabel()}',
+        'Loaded Time: ${event.elapsed.formatTimeLable()}',
         showCloseIcon: true,
       );
       // page: 11 - offsetX: -0.8081921947733832-zoom: 0.8124003868943545

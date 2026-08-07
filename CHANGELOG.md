@@ -1,3 +1,6 @@
+# 0.4.0
++ Updated `dart_core_extensions: ^0.5.0`
+
 # 0.3.0
 
 + Changed `Update Engine`
