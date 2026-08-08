@@ -1,16 +1,21 @@
+import 'dart:io';
+
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:t_pdf_reader_example/reader_v2.dart';
+import 'package:t_pdf_reader_example/thumb_page.dart';
 import 'package:than_pkg/than_pkg.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // TWidgets.instance.
 
   runApp(
     MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const MyApp(),
-      // theme: ThemeData.dark(),
+      theme: ThemeData.dark(),
     ),
   );
 }
@@ -24,6 +29,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool dropEnable = true;
+
+  final dir = Directory('/home/thancoder/Documents/pdf');
 
   @override
   Widget build(BuildContext context) {
@@ -69,87 +76,38 @@ class _MyAppState extends State<MyApp> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          TextButton(
-            onPressed: () {
+          ListTile(
+            title: Text('Thumbnail Gen'),
+            onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => ReaderV2(
-                    path:
-                        '/home/thancoder/Documents/Telegram Desktop/လူသတ်ကုန်းကမဖဲဝါ၊တာတေ.pdf',
-                  ),
-                ),
+                MaterialPageRoute(builder: (context) => ThumbPage(dir: dir)),
               );
             },
-            child: Text('လူသတ်ကုန်းကမဖဲဝါ၊တာတေ'),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ReaderV2(
-                    path: '/home/thancoder/Documents/Telegram Desktop/test.pdf',
-                  ),
-                ),
-              );
-            },
-            child: Text('Small Pdf'),
+          routeWidget(
+            '/home/thancoder/Documents/pdf/တာတေ၊_မဖဲဝါကိုကိုက်တဲတစ္ဆေ.pdf',
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ReaderV2(
-                    path:
-                        '/home/thancoder/Documents/Telegram Desktop/test2.pdf',
-                  ),
-                ),
-              );
-            },
-            child: Text('Big Pdf'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ReaderV2(
-                    path:
-                        '/home/thancoder/Documents/Telegram Desktop/test3.pdf',
-                  ),
-                ),
-              );
-            },
-            child: Text('Very Big Pdf'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ReaderV2(path: '/storage/emulated/0/test.pdf'),
-                ),
-              );
-            },
-            child: Text('Android Small Pdf'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ReaderV2(path: '/storage/emulated/0/test2.pdf'),
-                ),
-              );
-            },
-            child: Text('Android Big Pdf'),
-          ),
+          routeWidget('/home/thancoder/Documents/pdf/test2.pdf'),
+          routeWidget('/home/thancoder/Documents/pdf/test.pdf'),
+          routeWidget('/home/thancoder/Documents/Telegram Desktop/test2.pdf'),
+          routeWidget('/home/thancoder/Documents/Telegram Desktop/test3.pdf'),
+          routeWidget('/storage/emulated/0/test.pdf'),
         ],
       ),
+    );
+  }
+
+  Widget routeWidget(String path) {
+    final name = path.split('/').last;
+    return TextButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ReaderV2(path: path)),
+        );
+      },
+      child: Text(name),
     );
   }
 
