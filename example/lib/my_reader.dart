@@ -16,12 +16,16 @@ class _MyReaderState extends State<MyReader> {
   @override
   void initState() {
     controller.attached.listen((_) {
-      controller.stream.imageCache.put.listen((event) {
-        print('imageCache: $event');
-      });
       controller.stream.ready.listen((event) {
         print('reader ready');
         controller.action.jumpPage(100);
+        controller.action.setZoom(1.7000000000000006);
+        // controller.action.
+      });
+      controller.stream.zoomChanged.listen((_) {
+        print(
+          'zoom: ${controller.state.zoom} - currentOffsetX: ${controller.state.currentOffsetX}',
+        );
       });
     });
     super.initState();
@@ -89,7 +93,7 @@ class _MyReaderState extends State<MyReader> {
                 foregroundColor: col.onSurface,
               ),
               onPressed: () {
-                controller.action.setZoom(controller.state.zoom - 0.1);
+                controller.action.zoomOut();
               },
               icon: Icon(Icons.zoom_out),
             ),
@@ -99,7 +103,7 @@ class _MyReaderState extends State<MyReader> {
                 foregroundColor: col.onSurface,
               ),
               onPressed: () {
-                controller.action.setZoom(controller.state.zoom + 0.1);
+                controller.action.zoomIn();
               },
               icon: Icon(Icons.zoom_in),
             ),

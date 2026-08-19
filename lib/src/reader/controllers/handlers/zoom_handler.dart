@@ -70,4 +70,16 @@ mixin ZoomHandler on IReaderStateController {
 
     return state.recentViewportWidth / page.width;
   }
+
+  void zoomIn() {
+    setZoom((state.zoom + state.zoomStep).clamp(state.minZoom, state.maxZoom));
+  }
+
+  void zoomOut() {
+    setZoom((state.zoom - state.zoomStep).clamp(state.minZoom, state.maxZoom));
+  }
+
+  void setZoomStep(double step) {
+    state.zoomStep = step;
+  }
 }

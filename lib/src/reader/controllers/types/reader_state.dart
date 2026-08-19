@@ -10,6 +10,7 @@ class ReaderState {
   double zoom = 1.0;
   double maxZoom = 5.0;
   double minZoom = 0.1;
+  double zoomStep = 0.2;
   int totalPage = 0;
   int page = 0;
   ScrollbarInfo? scrollbarInfo;

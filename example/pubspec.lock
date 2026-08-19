@@ -534,10 +534,9 @@ packages:
   than_pdf_engine:
     dependency: "direct main"
     description:
-      name: than_pdf_engine
-      sha256: dc1cf000a7b9834719b6401d37cd2cd96863414cd148a2fe4897a6783f72d257
-      url: "https://pub.dev"
-    source: hosted
+      path: "/home/thancoder/projects/dart_plugins/than_pdf_engine"
+      relative: false
+    source: path
     version: "1.0.0"
   than_pkg:
     dependency: "direct main"

@@ -6,6 +6,11 @@ class ControllerActionEmpty extends IControllerAction {
   }
 
   @override
+  void setZoomStep(double step) {
+    _notAttached();
+  }
+
+  @override
   void jumpPage(int page) {
     _notAttached();
   }
@@ -55,6 +60,16 @@ class ControllerActionEmpty extends IControllerAction {
 
   @override
   void setFitZoom() {
+    _notAttached();
+  }
+
+  @override
+  void zoomIn() {
+    _notAttached();
+  }
+
+  @override
+  void zoomOut() {
     _notAttached();
   }
 }

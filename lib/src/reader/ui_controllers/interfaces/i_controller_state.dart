@@ -13,6 +13,7 @@ abstract class IControllerState {
   double get zoom;
   double get maxZoom;
   double get minZoom;
+  double get zoomStep;
 
   int get totalPage;
   int get page;

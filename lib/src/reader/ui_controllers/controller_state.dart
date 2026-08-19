@@ -58,4 +58,7 @@ class ControllerState extends IControllerState {
     size: _reader.pageImageCache.size,
     count: _reader.pageImageCache.count,
   );
+
+  @override
+  double get zoomStep => _reader.state.zoomStep;
 }

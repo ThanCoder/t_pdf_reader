@@ -13,6 +13,9 @@ abstract class IControllerAction {
   void setMaxZoom(double maxZoom);
 
   void setMinZoom(double minZoom);
+  void zoomIn();
+  void zoomOut();
+  void setZoomStep(double step);
 
   /// Default: 10 MB
   ///

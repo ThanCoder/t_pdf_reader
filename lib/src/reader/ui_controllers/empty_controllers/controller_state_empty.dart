@@ -50,4 +50,7 @@ class ControllerStateEmpty extends IControllerState {
 
   @override
   double get zoom => 0;
+
+  @override
+  double get zoomStep => 0;
 }

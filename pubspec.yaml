@@ -12,7 +12,8 @@ dependencies:
   flutter:
     sdk: flutter
   pdfium_dart: ^0.2.5
-  than_pdf_engine: ^1.0.0
+  than_pdf_engine:
+    path: /home/thancoder/projects/dart_plugins/than_pdf_engine
 
 dev_dependencies:
   flutter_test:

@@ -57,4 +57,19 @@ class ControllerActions extends IControllerAction {
   void setFitZoom() {
     _reader.setFitZoom();
   }
+
+  @override
+  void setZoomStep(double step) {
+    _reader.setZoomStep(step);
+  }
+
+  @override
+  void zoomIn() {
+    _reader.zoomIn();
+  }
+
+  @override
+  void zoomOut() {
+    _reader.zoomOut();
+  }
 }
