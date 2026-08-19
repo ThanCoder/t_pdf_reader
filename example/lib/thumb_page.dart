@@ -27,7 +27,7 @@ class _ThumbPageState extends State<ThumbPage> {
   late Directory outDir;
 
   bool isLoading = false;
-  final gen = PdfThumbnailGenerator.instance;
+  final gen = PdfImageGenerator.instance;
   void init() async {
     try {
       list.clear();
@@ -85,7 +85,7 @@ class _ThumbPageState extends State<ThumbPage> {
     }
     // print('genPath: $path');
     return FutureBuilder(
-      future: gen.generate(path, outFile.path),
+      future: gen.generate(path, outPath: outFile.path),
       builder: (context, snapshot) {
         if (snapshot.connectionState == .waiting) {
           return TLoader();

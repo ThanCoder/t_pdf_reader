@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
-import 'package:t_pdf_reader_example/reader_v2.dart';
+import 'package:t_pdf_reader_example/my_reader.dart';
 import 'package:t_pdf_reader_example/thumb_page.dart';
 import 'package:than_pkg/than_pkg.dart';
 
@@ -104,7 +104,7 @@ class _MyAppState extends State<MyApp> {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => ReaderV2(path: path)),
+          MaterialPageRoute(builder: (context) => MyReader(path: path)),
         );
       },
       child: Text(name),
@@ -114,7 +114,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> goReader(String path) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ReaderV2(path: path)),
+      MaterialPageRoute(builder: (context) => MyReader(path: path)),
     );
   }
 }
