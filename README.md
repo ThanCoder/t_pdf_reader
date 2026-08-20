@@ -22,7 +22,21 @@ A customizable PDF reader widget for Flutter, designed for smooth document viewi
 
 ---
 
+## Screenshots
 
+### Desktop
+
+<p align="center">
+  <img src="https://github.com/ThanCoder/t_pdf_reader/raw/main/screenshot/1.png" width="48%" />
+  <img src="https://github.com/ThanCoder/t_pdf_reader/raw/main/screenshot/2.png" width="48%" />
+</p>
+
+### Mobile
+
+<p align="center">
+  <img src="https://github.com/ThanCoder/t_pdf_reader/raw/main/screenshot/m1.jpg" width="30%" />
+  <img src="https://github.com/ThanCoder/t_pdf_reader/raw/main/screenshot/m2.jpg" width="30%" />
+</p>
 
 ## Basic Usage
 
