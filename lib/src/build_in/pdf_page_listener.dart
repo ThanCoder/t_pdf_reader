@@ -18,7 +18,10 @@ class PdfPageListener extends StatelessWidget {
             foregroundColor: col.onSurface,
           ),
           onPressed: onClicked,
-          child: Text('${controller.state.page}/${controller.state.totalPage}'),
+          child: Text(
+            '${controller.state.page}/${controller.state.totalPage}',
+            style: TextStyle(color: col.onSurface, fontWeight: .w600),
+          ),
         );
       },
     );
