@@ -6,11 +6,13 @@ mixin ReaderScrollbarLogic {
   _TPdfReaderState get state;
   ReaderStateController get stateController;
   AnimationController get animationController;
+  TPdfController get controller;
 
   Widget buildScrollbarWidget(BoxConstraints constraints) {
     return ReaderScrollbar(
-      controller: stateController,
+      stateController: stateController,
       animationController: animationController,
+      tController: controller,
     );
   }
 }

@@ -2,31 +2,25 @@
 import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
 
 abstract class IControllerState {
+  double get pageScrollStep;
+
+  bool get scrollbarEnable;
   double get currentOffset;
   double get totalOffset;
-
   double get viewportHeight;
   double get viewportWidth;
-
   bool get scrollbarDragging;
-
   double get zoom;
   double get maxZoom;
   double get minZoom;
   double get zoomStep;
-
   int get totalPage;
   int get page;
-
   ScrollbarInfo? get scrollbarInfo;
-
   double get scrollbarThumbHeight;
   double get scrollbarHeight;
-
   double get currentOffsetX;
-
   bool get isReady;
-
   ImageCacheState get imageCache;
 }
 

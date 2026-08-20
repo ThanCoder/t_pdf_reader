@@ -57,11 +57,11 @@ mixin ReaderInitMixin {
       stateController.state.page = 1;
     }
     stateController.addEvent(ReaderLoaded());
-    onReaderLoaded();
 
     /// ui
     Future.delayed(Duration(seconds: 1)).then((value) {
       stateController.addEvent(ReaderUILoaded());
+      onReaderLoaded();
     });
   }
 }

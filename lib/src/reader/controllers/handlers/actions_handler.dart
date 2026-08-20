@@ -1,12 +1,35 @@
 part of '../reader_state_controller.dart';
 
 mixin ActionsHandler on IReaderStateController {
+  void scrollUp() {
+    scrollBy(-state.pageScrollStep);
+  }
+
+  void scrollDown() {
+    scrollBy(state.pageScrollStep);
+  }
+
+  void pageDown() {
+    scrollBy(state.recentViewportHeight);
+  }
+
+  void pageUp() {
+    scrollBy(-state.recentViewportHeight);
+  }
+
+  void scrollbarEnable(bool enable) {
+    state.scrollbarEnable = enable;
+    addEvent(ScrollbarUiChanged());
+  }
+
   void jumpPage(int page) => jumpPageIndex(page - 1);
   void jumpPageIndex(int pageIndex) {
     final index = pageOffsets.indexWhere((e) => e.pageIndex == pageIndex);
     if (index == -1) return;
     final p = pageOffsets[index];
     state.currentOffset = p.top;
+
+    addEvent(UserJumpChanged(pageIndex));
 
     updateVisiablePages();
   }

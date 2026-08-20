@@ -6,6 +6,11 @@ class ControllerActionEmpty extends IControllerAction {
   }
 
   @override
+  void scrollbarEnable(bool enable) {
+    _notAttached();
+  }
+
+  @override
   void setZoomStep(double step) {
     _notAttached();
   }
@@ -70,6 +75,26 @@ class ControllerActionEmpty extends IControllerAction {
 
   @override
   void zoomOut() {
+    _notAttached();
+  }
+
+  @override
+  void pageDown() {
+    _notAttached();
+  }
+
+  @override
+  void pageUp() {
+    _notAttached();
+  }
+
+  @override
+  void scrollDown() {
+    _notAttached();
+  }
+
+  @override
+  void scrollUp() {
     _notAttached();
   }
 }

@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter/services.dart';
+import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/controller_stream.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/empty_controllers/controller_stream_empty.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/interfaces/i_controller_stream.dart';
@@ -25,7 +27,9 @@ part 'logic/reader_init_mixin.dart';
 part 'logic/reader_pdf_list_logic.dart';
 part 'logic/reader_scrollbar_logic.dart';
 part 'logic/reader_ui_event_listener_logic.dart';
+part 'logic/reader_keyboard_listener_logic.dart';
 part 'ui_controllers/t_pdf_controller.dart';
+part 'ui_controllers/interfaces/i_t_pdf_controller.dart';
 
 class TPdfReader extends StatefulWidget {
   const TPdfReader({
@@ -50,7 +54,8 @@ class _TPdfReaderState extends State<TPdfReader>
         ReaderAnimateLogic,
         ReaderUiEventListenerLogic,
         ReaderScrollbarLogic,
-        ReaderPdfListLogic {
+        ReaderPdfListLogic,
+        ReaderKeyboardListenerLogic {
   @override
   _TPdfReaderState get state => this;
 
@@ -69,6 +74,9 @@ class _TPdfReaderState extends State<TPdfReader>
   }
 
   @override
+  FocusNode keyboardFocusNode = FocusNode();
+
+  @override
   late final AnimationController animationController;
   @override
   void initState() {
@@ -84,6 +92,7 @@ class _TPdfReaderState extends State<TPdfReader>
   void onReaderLoaded() {
     stateController.state.isReady = true;
     stateController.addEvent(ReaderReady());
+    keyboardFocusNode.requestFocus();
   }
 
   @override
@@ -92,6 +101,7 @@ class _TPdfReaderState extends State<TPdfReader>
     stateController.dipose();
     worker.close();
     widget.controller._detach(stateController);
+    keyboardFocusNode.dispose();
     super.dispose();
   }
 
@@ -101,9 +111,19 @@ class _TPdfReaderState extends State<TPdfReader>
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
+      if (controller.widgetBuilder.lodingBuilder != null) {
+        return controller.widgetBuilder.lodingBuilder!(
+          context,
+          isLoading,
+          null,
+        );
+      }
       return Center(child: CircularProgressIndicator.adaptive());
     }
     if (error != null) {
+      if (controller.widgetBuilder.errorBuilder != null) {
+        return controller.widgetBuilder.errorBuilder!(context, error!);
+      }
       return Center(
         child: Text(error!, style: TextStyle(color: Colors.red)),
       );
@@ -114,12 +134,14 @@ class _TPdfReaderState extends State<TPdfReader>
   Widget get _viewer {
     return listenAllUiEvent(
       childBuilder: (constraints) {
-        return Stack(
-          children: [
-            buildPdfListWidget(constraints),
-            buildScrollbarWidget(constraints),
-            // testHeaderWidget(),
-          ],
+        return listenReaderKeyboardEvents(
+          child: Stack(
+            children: [
+              buildPdfListWidget(constraints),
+              buildScrollbarWidget(constraints),
+              // testHeaderWidget(),
+            ],
+          ),
         );
       },
     );

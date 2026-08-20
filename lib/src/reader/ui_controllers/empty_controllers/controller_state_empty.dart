@@ -3,6 +3,8 @@ import 'package:t_pdf_reader/src/reader/ui_controllers/interfaces/i_controller_s
 
 class ControllerStateEmpty extends IControllerState {
   @override
+  bool get scrollbarEnable => false;
+  @override
   double get currentOffset => 0;
 
   @override
@@ -53,4 +55,7 @@ class ControllerStateEmpty extends IControllerState {
 
   @override
   double get zoomStep => 0;
+
+  @override
+  double get pageScrollStep => 0;
 }

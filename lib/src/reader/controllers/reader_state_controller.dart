@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:t_pdf_reader/src/reader/controllers/types/page_offset.dart';
 import 'package:than_pdf_engine/core/models/page_size.dart';
-import 'package:t_pdf_reader/src/reader/controllers/types/reader_state.dart';
+import 'package:t_pdf_reader/src/reader/controllers/reader_state.dart';
 import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
 import 'package:t_pdf_reader/src/reader/utils/page_image_cache.dart';
 import 'package:t_pdf_reader/src/reader/utils/page_offset_utils.dart';

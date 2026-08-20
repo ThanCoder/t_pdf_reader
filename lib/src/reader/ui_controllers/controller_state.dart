@@ -7,6 +7,9 @@ class ControllerState extends IControllerState {
   ControllerState(this._reader);
 
   @override
+  bool get scrollbarEnable => _reader.state.scrollbarEnable;
+
+  @override
   double get currentOffset => _reader.state.currentOffset;
 
   @override
@@ -61,4 +64,7 @@ class ControllerState extends IControllerState {
 
   @override
   double get zoomStep => _reader.state.zoomStep;
+
+  @override
+  double get pageScrollStep => _reader.state.pageScrollStep;
 }

@@ -34,6 +34,11 @@ class ZoomChanged extends ReaderEvent {
   const ZoomChanged(this.zoom);
 }
 
+class UserJumpChanged extends ReaderEvent {
+  final int page;
+  const UserJumpChanged(this.page);
+}
+
 class ScaleChanged extends ReaderEvent {
   const ScaleChanged();
 }

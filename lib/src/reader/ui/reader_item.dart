@@ -44,7 +44,11 @@ class _ReaderItemState extends State<ReaderItem> {
     super.initState();
     _subscription = widget.stateController.stream
         .where(
-          (e) => e is ZoomChanged || e is MobileScaleChanged || e is ScrollEnd,
+          (e) =>
+              e is ZoomChanged ||
+              e is MobileScaleChanged ||
+              e is ScrollEnd ||
+              e is UserJumpChanged,
         )
         .listen((event) {
           if (lastQuality == 90 &&
@@ -137,10 +141,15 @@ class _ReaderItemState extends State<ReaderItem> {
 
   @override
   Widget build(BuildContext context) {
+    final footerBuilder = widget.controller.widgetBuilder.footerBuilder;
+    final page = widget.offset.pageIndex + 1;
     return Column(
       children: [
-        Text('Page: ${widget.offset.pageIndex + 1}'),
         Expanded(child: _image()),
+        if (footerBuilder != null)
+          footerBuilder(context, page)
+        else
+          Text('Page: $page'),
       ],
     );
   }

@@ -1,366 +1,662 @@
-# T Pdf Reader
+# T PDF Reader
 
-A lightweight and high-performance PDF reader for Flutter, powered by `than_pdf_engine`. Optimized for handling large-sized PDF files efficiently. While it focuses on core rendering performance, it offers a modular architecture that allows developers to easily extend or implement advanced features as needed.
+A customizable PDF reader widget for Flutter, designed for smooth document viewing with programmatic control, zooming, page navigation, custom UI components, scrollbar customization, and image caching.
 
-### **Supported Platforms**
+## Features
 
-- **Android**
-- **Linux**
+* 📄 PDF document rendering
+* 🔍 Zoom in / zoom out
+* 🎯 Fit-to-view zoom
+* 📖 Jump to a specific page
+* 🖱️ Mouse wheel and pointer scrolling
+* 👆 Touch scrolling and pinch-to-zoom
+* 🖥️ Desktop-friendly interaction
+* 📱 Mobile gesture support
+* 🎨 Custom footer widgets
+* 📜 Fully customizable scrollbar
+* 🌙 Custom dark-mode support
+* 🖼️ Image cache state listeners
+* 🔄 Reactive controller streams
+* ⚡ Programmatic reader actions
+* 🧩 Extensible reader UI
 
-### **Key Features**
-
-- **High Performance:** Specifically optimized to handle large PDF files without memory issues.
-- **Modular Design:** Built with a simple core, allowing you to implement your own features (annotations, text selection, etc.) on top of the engine.
-
-> **Note:** This package is currently in its early stages. It provides essential rendering capabilities but is less feature-rich compared to alternatives like `pdfrx`. You are encouraged to extend its functionality to fit your specific requirements.
-
-### **Example Usage**
-
-```dart
-final pdfController = TPdfController();
-
-TPdfReader(
-  path: widget.path,
-  password: null,
-  controller: pdfController,
-),
-```
-
-### Example File
-
-[Go Full Example](#full-example)
-
-[Check out the implementation details here](https://github.com/ThanCoder/t_pdf_reader/blob/main/example/lib/reader_v2.dart)
+---
 
 
-<details>
-  <summary>📸 Desktop Screenshot </summary>
 
-![Screenshot](https://github.com/ThanCoder/t_pdf_reader/blob/main/screenshot/2026-07-14-153352_691x601_scrot.png?raw=true)
-
-</details>
-
-<details>
-  <summary>📸 Mobile Screenshot </summary>
-
-<img src="https://github.com/ThanCoder/t_pdf_reader/blob/main/screenshot/Screenshot_2026-07-14-15-00-47-842_com.example.t_pdf_reader_example.jpg?raw=true" alt="Mobile Screen" width="300" />
-<img src="https://github.com/ThanCoder/t_pdf_reader/blob/main/screenshot/Screenshot_2026-07-14-15-00-52-171_com.example.t_pdf_reader_example.jpg?raw=true" alt="Mobile Screen" width="300" />
-
-</details>
-
-### Custom Scroll Widgets
+## Basic Usage
 
 ```dart
-late final TPdfController pdfController;
-pdfController = TPdfController(
-      scrollbarWidget: (thumbWidth, thumbHeight) => defaultScrollbar1(thumbWidth: thumbWidth, thumbHeight: thumbHeight),
-);
-
-// default custom scrollbar
-
-//defaultScrollbar1
-//defaultScrollbarMinimal
-//defaultScrollbarNeon
-```
-
-### Footer Widget
-
-```dart
-late final TPdfController pdfController;
-pdfController = TPdfController(
-      pageFooterWidget: (page) => Text('I am Footer: $page'),
-);
-```
-
-### Controller Events
-
-```dart
-late final TPdfController pdfController;
-pdfController = TPdfController();
-
-pdfController.onPdfLoaded.listen((event) {
-  print('Pdf Loaded Time: ${event.elapsed.autoTimeLabel()}');
-  showTSnackBar(
-    context,
-    'Loaded Time: ${event.elapsed.autoTimeLabel()}',
-    showCloseIcon: true,
-  );
-  // page: 11 - offsetX: -0.8081921947733832-zoom: 0.8124003868943545
-  pdfController.jumpToPage(
-    11,
-    offsetX: -14.8081921947733832, //recent offsetx
-    zoom: 2.8124003868943545, //recent zoom
-  );
-});
-pdfController.onPageChanged.listen((event) {
-  print(
-    'page: ${event.page} - offsetX: ${pdfController.currentOffsetX}-zoom: ${pdfController.currentZoom}',
-  );
-});
-```
-
-### Key Events
-
-```dart
-late final TPdfController pdfController;
-pdfController = TPdfController(
-  onKeyEvent: (node, event) {
-    if (event is KeyDownEvent && event.logicalKey == .escape) {
-      if (isFullscreen) {
-        isFullscreen = false;
-        setState(() {});
-        ThanPkg.platform.toggleFullScreen(isFullScreen: isFullscreen);
-      }
-      return .handled;
-    }
-    if (event is KeyDownEvent && event.physicalKey == .keyF) {
-      isFullscreen = !isFullscreen;
-      setState(() {});
-      ThanPkg.platform.toggleFullScreen(isFullScreen: isFullscreen);
-      return .handled;
-    }
-    return .ignored;
-  },
-);
-```
-
-### Full Example
-
-<details>
-  <summary>Click Expand</summary>
-  
-```dart
-import 'package:dart_core_extensions/dart_core_extensions.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
-import 'package:t_widgets/t_widgets.dart';
-import 'package:than_pkg/than_pkg.dart';
 
-class ReaderV2 extends StatefulWidget {
+class MyReader extends StatefulWidget {
+  const MyReader({
+    super.key,
+    required this.path,
+  });
+
   final String path;
-  const ReaderV2({super.key, required this.path});
 
   @override
-  State<ReaderV2> createState() => _ReaderV2State();
+  State<MyReader> createState() => _MyReaderState();
 }
 
-class _ReaderV2State extends State<ReaderV2> {
-  late final TPdfController pdfController;
-  @override
-  void initState() {
-    pdfController = TPdfController(
-      scrollbarWidget: (thumbWidth, thumbHeight) => defaultScrollbarNeon(
-        thumbWidth: thumbWidth,
-        thumbHeight: thumbHeight,
-      ),
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent && event.logicalKey == .escape) {
-          if (isFullscreen) {
-            isFullscreen = false;
-            setState(() {});
-            ThanPkg.platform.toggleFullScreen(isFullScreen: isFullscreen);
-          }
-          return .handled;
-        }
-        if (event is KeyDownEvent && event.physicalKey == .keyF) {
-          isFullscreen = !isFullscreen;
-          setState(() {});
-          ThanPkg.platform.toggleFullScreen(isFullScreen: isFullscreen);
-          return .handled;
-        }
-        return .ignored;
-      },
-    );
-    super.initState();
-    init();
-  }
+class _MyReaderState extends State<MyReader> {
+  final controller = TPdfController();
 
   @override
   void dispose() {
-    ThanPkg.platform.toggleFullScreen(isFullScreen: false);
-    // pdfController.dispose();
+    controller.dispose();
     super.dispose();
-  }
-
-  bool isDarkMode = false;
-  bool isScaleEnable = false;
-  bool isFullscreen = false;
-
-  void init() {
-    pdfController.onPdfLoaded.listen((event) {
-      print('Pdf Loaded Time: ${event.elapsed.autoTimeLabel()}');
-      showTSnackBar(
-        context,
-        'Loaded Time: ${event.elapsed.autoTimeLabel()}',
-        showCloseIcon: true,
-      );
-      // page: 11 - offsetX: -0.8081921947733832-zoom: 0.8124003868943545
-      // pdfController.jumpToPage(
-      //   300,
-      //   offsetX: -14.8081921947733832,
-      //   zoom: 2.8124003868943545,
-      // );
-    });
-    pdfController.onPageChanged.listen((event) {
-      print(
-        'page: ${event.page} - offsetX: ${pdfController.currentOffsetX}-zoom: ${pdfController.currentZoom}',
-      );
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: isDarkMode ? ThemeData.dark() : ThemeData.light(),
-      child: Scaffold(
-        appBar: isFullscreen
-            ? null
-            : AppBar(title: Text(widget.path.split('/').last)),
-        body: Stack(
-          children: [
-            Positioned.fill(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              top: isFullscreen ? 0 : 40,
-              child: ClipRRect(
+    return Scaffold(
+      body: TPdfReader(
+        path: widget.path,
+        controller: controller,
+      ),
+    );
+  }
+}
+```
+
+---
+
+# Controller
+
+`TPdfController` provides access to reader state, actions, and streams.
+
+```dart
+final controller = TPdfController();
+```
+
+The controller can be used to:
+
+* Control zoom
+* Navigate between pages
+* Listen for reader events
+* Access the current reader state
+* Customize reader widgets
+* Control scrollbar visibility
+* Monitor image cache state
+
+---
+
+# Reader Actions
+
+## Fit Zoom
+
+Automatically fit the PDF to the available viewport.
+
+```dart
+controller.action.setFitZoom();
+```
+
+## Zoom In
+
+```dart
+controller.action.zoomIn();
+```
+
+## Zoom Out
+
+```dart
+controller.action.zoomOut();
+```
+
+## Set Zoom
+
+```dart
+controller.action.setZoom(1.5);
+```
+
+## Jump to Page
+
+```dart
+controller.action.jumpPage(100);
+```
+
+---
+
+# Reader State
+
+The current reader state is available through the controller.
+
+```dart
+final zoom = controller.state.zoom;
+final page = controller.state.currentPage;
+```
+
+For example:
+
+```dart
+controller.stream.zoomChanged.listen((_) {
+  print('Zoom: ${controller.state.zoom}');
+});
+```
+
+---
+
+# Reader Streams
+
+The controller exposes reactive streams for reader state changes.
+
+## Ready
+
+```dart
+controller.stream.ready.listen((_) {
+  print('PDF reader is ready');
+});
+```
+
+## Zoom Changed
+
+```dart
+controller.stream.zoomChanged.listen((_) {
+  print('Zoom: ${controller.state.zoom}');
+});
+```
+
+## Attached
+
+The `attached` stream can be used to detect when the reader controller is attached to a `TPdfReader`.
+
+```dart
+controller.attached.listen((_) {
+  print('Reader attached');
+});
+```
+
+---
+
+# Custom Reader Widgets
+
+`TPdfController` supports custom reader UI through `TPdfWidgetBuilder`.
+
+```dart
+final controller = TPdfController(
+  widgetBuilder: TPdfWidgetBuilder(
+    footerBuilder: (context, page) {
+      return Text(
+        'Page: $page',
+      );
+    },
+  ),
+);
+```
+
+This allows applications to customize parts of the reader without modifying the reader itself.
+
+---
+
+# Custom Footer
+
+You can provide your own footer widget using `footerBuilder`.
+
+```dart
+final controller = TPdfController(
+  widgetBuilder: TPdfWidgetBuilder(
+    footerBuilder: (context, page) {
+      return Container(
+        padding: const EdgeInsets.all(8),
+        child: Text(
+          'Page: $page',
+        ),
+      );
+    },
+  ),
+);
+```
+
+The `page` parameter represents the current page index.
+
+---
+
+# Custom Scrollbar
+
+The scrollbar can be completely customized using `scrollbarBuilder`.
+
+```dart
+final controller = TPdfController(
+  widgetBuilder: TPdfWidgetBuilder(
+    scrollbarBuilder: (context, page) {
+      return .new(
+        widgetInfo: .new(
+          thumbWidth: 20,
+          thumbHeight: 40,
+        ),
+        builder: defaultScrollbarGlow(
+          thumbWidth: 20,
+          thumbHeight: 40,
+        ),
+      );
+    },
+  ),
+);
+```
+
+The scrollbar builder receives the current page, allowing the scrollbar to also be used as a page indicator.
+
+---
+
+# Custom Scrollbar UI
+
+You can create any Flutter widget for the scrollbar.
+
+```dart
+scrollbarBuilder: (context, page) {
+  final colorScheme = Theme.of(context).colorScheme;
+
+  return .new(
+    widgetInfo: .new(
+      thumbWidth: 32,
+      thumbHeight: 28,
+      positionRight: 12,
+    ),
+    builder: DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colorScheme.outlineVariant,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          '${page + 1}',
+          style: TextStyle(
+            color: colorScheme.onPrimaryContainer,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    ),
+  );
+},
+```
+
+This makes it possible to build:
+
+* Minimal scrollbars
+* Rounded scrollbars
+* Neon scrollbars
+* Glass-style scrollbars
+* Page indicator scrollbars
+* Custom branded scrollbars
+
+---
+
+# Built-in Scrollbar Styles
+
+Built-in scrollbar styles can be used directly.
+
+```dart
+builder: defaultScrollbarGlow(
+  thumbWidth: 20,
+  thumbHeight: 40,
+),
+```
+
+Example:
+
+```dart
+scrollbarBuilder: (context, page) {
+  return .new(
+    widgetInfo: .new(
+      thumbWidth: 20,
+      thumbHeight: 40,
+    ),
+    builder: defaultScrollbarGlow(
+      thumbWidth: 20,
+      thumbHeight: 40,
+    ),
+  );
+},
+```
+
+---
+
+# Scrollbar Toggle
+
+The scrollbar visibility can be controlled from the UI.
+
+```dart
+PdfScrollbarToggler(
+  controller: controller,
+)
+```
+
+This is useful for applications that want to provide a reader toolbar with a scrollbar visibility toggle.
+
+---
+
+# Page Navigation
+
+A page listener can be used to display the current page and trigger page navigation.
+
+```dart
+PdfPageListener(
+  controller: controller,
+  onClicked: jumpPage,
+)
+```
+
+For example:
+
+```dart
+void jumpPage() {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return PdfPageJumpDialog(
+        controller: controller,
+      );
+    },
+  );
+}
+```
+
+---
+
+# Zoom Controls
+
+Built-in zoom controls can be added to a reader toolbar.
+
+```dart
+PdfZoomOut(
+  controller: controller,
+),
+
+PdfZoomIn(
+  controller: controller,
+),
+
+PdfZoomListener(
+  controller: controller,
+),
+```
+
+This provides:
+
+* Zoom out button
+* Zoom in button
+* Current zoom display/listening
+
+---
+
+# Image Cache
+
+The reader exposes image cache events through the controller.
+
+```dart
+PdfCacheImageListener(
+  controller: controller,
+)
+```
+
+This can be used to monitor PDF page image caching and provide cache-related UI.
+
+---
+
+# Dark Mode
+
+The reader can be combined with Flutter's `ColorFiltered` widget to create a custom dark reading mode.
+
+```dart
+bool darkMode = false;
+```
+
+```dart
+ColorFiltered(
+  colorFilter: ColorFilter.mode(
+    Colors.white,
+    darkMode
+        ? BlendMode.difference
+        : BlendMode.dstIn,
+  ),
+  child: TPdfReader(
+    path: widget.path,
+    controller: controller,
+  ),
+)
+```
+
+Toggle the mode from the UI:
+
+```dart
+IconButton(
+  onPressed: () {
+    setState(() {
+      darkMode = !darkMode;
+    });
+  },
+  icon: Icon(
+    darkMode
+        ? Icons.dark_mode_outlined
+        : Icons.light_mode_outlined,
+  ),
+)
+```
+
+---
+
+# Complete Example
+
+The following example demonstrates a custom reader toolbar, page navigation, zoom controls, dark mode, scrollbar customization, and cache monitoring.
+
+```dart
+class MyReader extends StatefulWidget {
+  const MyReader({
+    super.key,
+    required this.path,
+  });
+
+  final String path;
+
+  @override
+  State<MyReader> createState() => _MyReaderState();
+}
+
+class _MyReaderState extends State<MyReader> {
+  final controller = TPdfController(
+    widgetBuilder: TPdfWidgetBuilder(
+      footerBuilder: (context, page) {
+        return Text(
+          'Page: ${page + 1}',
+        );
+      },
+      scrollbarBuilder: (context, page) {
+        return .new(
+          widgetInfo: .new(
+            thumbWidth: 20,
+            thumbHeight: 40,
+          ),
+          builder: defaultScrollbarGlow(
+            thumbWidth: 20,
+            thumbHeight: 40,
+          ),
+        );
+      },
+    ),
+  );
+
+  bool darkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller.attached.listen((_) {
+      controller.stream.ready.listen((_) {
+        controller.action.setFitZoom();
+      });
+
+      controller.stream.zoomChanged.listen((_) {
+        print(
+          'zoom: ${controller.state.zoom}',
+        );
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('PDF Reader'),
+      ),
+      body: StreamBuilder(
+        stream: controller.attached,
+        builder: (context, snapshot) {
+          return Stack(
+            children: [
+              Positioned.fill(
+                top: 50,
                 child: ColorFiltered(
                   colorFilter: ColorFilter.mode(
                     Colors.white,
-                    isDarkMode ? BlendMode.difference : BlendMode.dst,
+                    darkMode
+                        ? BlendMode.difference
+                        : BlendMode.dstIn,
                   ),
-                  child: GestureDetector(
-                    onDoubleTap: () {
-                      if (!isFullscreen) return;
-                      isFullscreen = false;
-                      setState(() {});
-                      ThanPkg.platform.toggleFullScreen(isFullScreen: false);
-                    },
-                    child: Container(
-                      color: Colors.white,
-                      width: double.infinity,
-                      height: double.infinity,
-                      child: TPdfReader(
-                        path: widget.path,
-                        controller: pdfController,
-                      ),
-                    ),
+                  child: TPdfReader(
+                    path: widget.path,
+                    controller: controller,
                   ),
                 ),
               ),
-            ),
-            if (!isFullscreen)
-              Positioned(left: 0, right: 0, top: 0, child: _header),
-          ],
-        ),
+
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 50,
+                child: _buildToolbar(),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget get _header => Theme(
-    data: isDarkMode ? ThemeData.dark() : ThemeData.light(),
-    child: Column(
-      children: [
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            spacing: 6,
-            children: [
-              SizedBox(width: 10),
-              InkWell(
-                mouseCursor: SystemMouseCursors.click,
-                onTap: _showGoToPageDialog,
-                child: Padding(
-                  padding: const EdgeInsets.all(2.0),
-                  child: StreamBuilder(
-                    stream: pdfController.onPageChanged,
-                    builder: (context, snapshot) {
-                      return Text(
-                        '${pdfController.currentPage}/${pdfController.totalPage}',
-                        style: TextStyle(color: Colors.teal),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    isDarkMode = !isDarkMode;
-                  });
-                },
-                icon: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
-              ),
-              StreamBuilder(
-                stream: pdfController.onZoomChanged,
-                builder: (context, asyncSnapshot) {
-                  return Text(
-                    'Zoom: ${(pdfController.currentZoom * 100).toInt()}%',
-                  );
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.zoom_out),
-                onPressed: pdfController.zoomOut, // ၂၅% လျှော့မယ်
-              ),
-              IconButton(
-                icon: Icon(Icons.zoom_in),
-                onPressed: pdfController.zoomIn, // ၂၅% တိုးမယ်
-              ),
-              IconButton(
-                onPressed: () {
-                  isFullscreen = !isFullscreen;
-                  ThanPkg.platform.toggleFullScreen(isFullScreen: isFullscreen);
-                  setState(() {});
-                },
-                icon: Icon(
-                  isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen,
-                ),
-              ),
-              // scrollbar
-              ValueListenableBuilder(
-                valueListenable: pdfController.scrollbarNotifier,
-                builder: (context, enable, child) {
-                  return IconButton(
-                    onPressed: () {
-                      pdfController.setScrollbarEnable(!enable);
-                    },
-                    icon: Icon(
-                      enable ? Icons.unfold_less : Icons.unfold_more_rounded,
-                    ),
-                  );
-                },
-              ),
-            ],
+  Widget _buildToolbar() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          PdfPageListener(
+            controller: controller,
+            onClicked: jumpPage,
           ),
-        ),
-      ],
-    ),
-  );
 
-  void _showGoToPageDialog() {
-    showTReanmeDialog(
-      context,
-      text: pdfController.currentPage.toString(),
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      textInputType: TextInputType.number,
-      submitText: 'Go To Page',
-      onCheckIsError: (text) {
-        final number = int.tryParse(text);
-        if (number == null) return 'Page Number is Required!';
-        if (number > pdfController.totalPage) {
-          return 'Page: `$number` > Total: `${pdfController.totalPage}`';
-        }
-        return null;
-      },
-      onSubmit: (text) {
-        pdfController.jumpToPage(int.parse(text));
+          PdfZoomOut(
+            controller: controller,
+          ),
+
+          PdfZoomIn(
+            controller: controller,
+          ),
+
+          PdfZoomListener(
+            controller: controller,
+          ),
+
+          IconButton(
+            onPressed: () {
+              setState(() {
+                darkMode = !darkMode;
+              });
+            },
+            icon: Icon(
+              darkMode
+                  ? Icons.dark_mode_outlined
+                  : Icons.light_mode_outlined,
+            ),
+          ),
+
+          PdfScrollbarToggler(
+            controller: controller,
+          ),
+
+          PdfCacheImageListener(
+            controller: controller,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void jumpPage() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return PdfPageJumpDialog(
+          controller: controller,
+        );
       },
     );
   }
 }
-
 ```
 
-</details>
+---
+
+# Architecture
+
+The reader is designed around a controller-driven architecture.
+
+```text
+TPdfReader
+    │
+    └── TPdfController
+          │
+          ├── state
+          │
+          ├── action
+          │
+          ├── stream
+          │
+          └── widgetBuilder
+                │
+                ├── footerBuilder
+                └── scrollbarBuilder
+```
+
+This keeps the PDF rendering engine and reader state separate from application-specific UI.
+
+---
+
+# Customization
+
+The reader is intentionally designed to be customizable.
+
+You can build your own:
+
+* Header
+* Footer
+* Toolbar
+* Scrollbar
+* Page indicator
+* Zoom controls
+* Dark-mode controls
+* Reader overlays
+* Page navigation UI
+
+The default reader UI can be used as-is, or replaced with application-specific widgets.
+
+---
+
+# License
+
+Add your project license information here.

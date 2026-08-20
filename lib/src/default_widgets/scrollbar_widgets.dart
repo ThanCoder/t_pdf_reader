@@ -112,3 +112,172 @@ Widget defaultScrollbarNeon({
     ),
   );
 }
+
+Widget defaultScrollbarCyber({
+  required double thumbWidth,
+  required double thumbHeight,
+}) {
+  return MouseRegion(
+    cursor: SystemMouseCursors.grabbing,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF00F5FF), Color(0xFF7C4DFF), Color(0xFFFF00E5)],
+        ),
+        borderRadius: BorderRadius.circular(99),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00F5FF).withValues(alpha: .45),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Center(
+        child: Container(
+          width: 3,
+          height: thumbHeight * .45,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .8),
+            borderRadius: BorderRadius.circular(99),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget defaultScrollbarAurora({
+  required double thumbWidth,
+  required double thumbHeight,
+}) {
+  return MouseRegion(
+    cursor: SystemMouseCursors.grabbing,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF00E5FF), Color(0xFF00C853), Color(0xFFB2FF59)],
+        ),
+        borderRadius: BorderRadius.circular(99),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00E5FF).withValues(alpha: .35),
+            blurRadius: 12,
+          ),
+        ],
+      ),
+      child: Center(
+        child: Container(
+          width: 3,
+          height: thumbHeight * .35,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .85),
+            borderRadius: BorderRadius.circular(99),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget defaultScrollbarGlass({
+  required double thumbWidth,
+  required double thumbHeight,
+}) {
+  return MouseRegion(
+    cursor: SystemMouseCursors.grabbing,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: Colors.white.withValues(alpha: .3)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: .18), blurRadius: 10),
+        ],
+      ),
+      child: Center(
+        child: Container(
+          width: 3,
+          height: thumbHeight * .5,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: .75),
+            borderRadius: BorderRadius.circular(99),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget defaultScrollbarCyberDots({
+  required double thumbWidth,
+  required double thumbHeight,
+}) {
+  return MouseRegion(
+    cursor: SystemMouseCursors.grabbing,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFF2D95), Color(0xFF8B5CF6)],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFF2D95).withValues(alpha: .4),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(
+            3,
+            (index) => Container(
+              width: 3,
+              height: 3,
+              margin: const EdgeInsets.symmetric(horizontal: 1.5),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget defaultScrollbarGlow({
+  required double thumbWidth,
+  required double thumbHeight,
+}) {
+  return MouseRegion(
+    cursor: SystemMouseCursors.grabbing,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .75),
+        borderRadius: BorderRadius.circular(99),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withValues(alpha: .5),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+    ),
+  );
+}

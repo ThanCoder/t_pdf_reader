@@ -1,5 +1,7 @@
-import 'package:dart_core_extensions/dart_core_extensions.dart';
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
 
 class MyReader extends StatefulWidget {
@@ -11,15 +13,38 @@ class MyReader extends StatefulWidget {
 }
 
 class _MyReaderState extends State<MyReader> {
-  final controller = TPdfController();
+  late final TPdfController controller;
 
   @override
   void initState() {
+    controller = TPdfController(
+      widgetBuilder: TPdfWidgetBuilder(
+        footerBuilder: (context, page) => SizedBox.shrink(),
+        scrollbarBuilder: (context, page) {
+          return .new(
+            widgetInfo: .new(thumbWidth: 20, thumbHeight: 40),
+            builder: defaultScrollbarGlow(thumbWidth: 20, thumbHeight: 40),
+          );
+        },
+      ),
+      eventBuilder: .new(
+        onKeyEventAfterConfig: (node, event) {
+          if (event is KeyDownEvent) {
+            if (event.physicalKey == .arrowDown) {
+              print('custom down');
+              return .handled;
+            }
+          }
+          return .ignored;
+        },
+      ),
+    );
     controller.attached.listen((_) {
       controller.stream.ready.listen((event) {
+        controller.action.setFitZoom();
         print('reader ready');
-        controller.action.jumpPage(100);
-        controller.action.setZoom(1.7000000000000006);
+        // controller.action.jumpPage(100);
+        // controller.action.setZoom(1.7000000000000006);
         // controller.action.
       });
       controller.stream.zoomChanged.listen((_) {
@@ -37,18 +62,26 @@ class _MyReaderState extends State<MyReader> {
     super.dispose();
   }
 
+  bool darkMode = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Pdf Reader')),
       body: StreamBuilder(
-        stream: controller.lifecycle,
+        stream: controller.attached,
         builder: (context, asyncSnapshot) {
           return Stack(
             children: [
               Positioned.fill(
                 top: 50,
-                child: TPdfReader(path: widget.path, controller: controller),
+                child: ColorFiltered(
+                  colorFilter: .mode(
+                    Colors.white,
+                    darkMode ? .difference : .dstIn,
+                  ),
+                  child: TPdfReader(path: widget.path, controller: controller),
+                ),
               ),
               Positioned(
                 top: 0,
@@ -67,65 +100,37 @@ class _MyReaderState extends State<MyReader> {
   Widget testHeaderWidget() {
     final col = Theme.of(context).colorScheme;
     return Container(
-      color: col.surfaceContainerHighest,
+      color: col.surfaceContainer,
       child: SingleChildScrollView(
         scrollDirection: .horizontal,
         child: Row(
           spacing: 8,
           children: [
-            StreamBuilder(
-              stream: controller.stream.pageChanged,
-              builder: (context, asyncSnapshot) {
-                return TextButton(
-                  onPressed: () {
-                    controller.action.jumpPage(150);
-                  },
-                  child: Text(
-                    '${controller.state.page}/${controller.state.totalPage}',
-                  ),
-                );
-              },
-            ),
-
+            PdfPageListener(controller: controller, onClicked: jumpPage),
+            PdfZoomOut(controller: controller),
+            PdfZoomIn(controller: controller),
+            PdfZoomListener(controller: controller),
             IconButton(
-              style: IconButton.styleFrom(
-                backgroundColor: col.surfaceContainer,
-                foregroundColor: col.onSurface,
-              ),
               onPressed: () {
-                controller.action.zoomOut();
+                darkMode = !darkMode;
+                setState(() {});
               },
-              icon: Icon(Icons.zoom_out),
-            ),
-            IconButton(
-              style: IconButton.styleFrom(
-                backgroundColor: col.surfaceContainer,
-                foregroundColor: col.onSurface,
+              icon: Icon(
+                darkMode ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
               ),
-              onPressed: () {
-                controller.action.zoomIn();
-              },
-              icon: Icon(Icons.zoom_in),
             ),
-            StreamBuilder(
-              stream: controller.stream.zoomChanged,
-              builder: (context, asyncSnapshot) {
-                return Text(
-                  'Zoom: ${controller.state.zoom.toStringAsFixed(4)}',
-                );
-              },
-            ),
-            StreamBuilder(
-              stream: controller.stream.imageCache.put,
-              builder: (context, asyncSnapshot) {
-                return Text(
-                  '${controller.state.imageCache.count}/${controller.state.imageCache.size.toFileSizeLabel()}',
-                );
-              },
-            ),
+            PdfScrollbarToggler(controller: controller),
+            PdfCacheImageListener(controller: controller),
           ],
         ),
       ),
+    );
+  }
+
+  void jumpPage() {
+    showDialog(
+      context: context,
+      builder: (context) => PdfPageJumpDialog(controller: controller),
     );
   }
 }

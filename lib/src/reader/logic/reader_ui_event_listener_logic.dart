@@ -67,6 +67,17 @@ mixin ReaderUiEventListenerLogic {
           if (event is PointerScrollEvent) {
             animationController.stop();
             final dy = event.scrollDelta.dy;
+
+            if (HardwareKeyboard.instance.isControlPressed) {
+              if (dy < 0) {
+                stateController.zoomIn();
+              } else if (dy > 0) {
+                stateController.zoomOut();
+              }
+
+              return;
+            }
+
             stateController.scrollBy(dy);
           }
         },
@@ -79,14 +90,6 @@ mixin ReaderUiEventListenerLogic {
             stateController.setScrollbarHeight(viewportHeight);
 
             return childBuilder(constraints);
-
-            // return Stack(
-            //   children: [
-            //     _body(constraints),
-            //     _scrollbar(viewportHeight: viewportHeight),
-            //     // testHeaderWidget(),
-            //   ],
-            // );
           },
         ),
       ),

@@ -20,4 +20,7 @@ class ReaderState {
   // Sensitivity Factor (0.1 = အလွန်နှေး, 0.3 = ငြိမ့်ငြိမ့်လေး, 1.0 = မူလအတိုင်း မြန်)
   double zoomSensitivity = 0.3;
   bool isReady = false;
+  bool scrollbarEnable = true;
+
+  double pageScrollStep = 60;
 }

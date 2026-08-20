@@ -1,49 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/src/reader/controllers/reader_state_controller.dart';
+import 'package:t_pdf_reader/t_pdf_reader.dart';
 
 class ReaderScrollbar extends StatelessWidget {
   const ReaderScrollbar({
     super.key,
-    required this.controller,
+    required this.stateController,
     required this.animationController,
+    required this.tController,
   });
 
-  final ReaderStateController controller;
+  final ReaderStateController stateController;
+  final TPdfController tController;
   final AnimationController animationController;
 
   @override
   Widget build(BuildContext context) {
+    final col = Theme.of(context).colorScheme;
     return StreamBuilder(
-      stream: controller.stream.whereType<ScrollbarUiChanged>(),
+      stream: stateController.stream.whereType<ScrollbarUiChanged>(),
       builder: (context, snapshot) {
-        final info = controller.state.scrollbarInfo;
+        if (!stateController.state.scrollbarEnable) {
+          return Positioned(child: SizedBox.shrink());
+        }
+        final info = stateController.state.scrollbarInfo;
         if (info == null) {
           return Positioned(child: SizedBox.shrink());
         }
+        //build in
+        double? posRight = 5;
+        double? posLeft;
+        double thumbWidth = 15;
+        double thumbHeight = info.thumbHeight;
+
+        Widget? customBuilder;
+        //*****************Scrollbar Custom Builder********************************* */
+        final scrollbarBuilder = tController.widgetBuilder.scrollbarBuilder;
+        if (scrollbarBuilder != null) {
+          final func = scrollbarBuilder(context, stateController.state.page);
+          customBuilder = func.builder;
+          final info = func.widgetInfo;
+          if (info.positionLeft != null) {
+            posLeft = info.positionLeft;
+            posRight = null;
+          } else if (info.positionRight != null) {
+            posRight = info.positionRight;
+            posLeft = null;
+          }
+          thumbHeight = info.thumbHeight;
+          thumbWidth = info.thumbWidth;
+        }
+        //*****************Scrollbar Custom Builder********************************* */
 
         return Positioned(
           top: info.thumbTop,
-          right: 2,
-          width: 8,
-          height: info.thumbHeight,
+          left: posLeft,
+          right: posRight,
+          width: thumbWidth,
+          height: thumbHeight,
           child: GestureDetector(
             onVerticalDragStart: (_) {
-              controller.state.scrollbarDragging = true;
-              controller.addEvent(ScrollbarDragEvent(true));
+              stateController.state.scrollbarDragging = true;
+              stateController.addEvent(ScrollbarDragEvent(true));
               animationController.stop();
             },
             onVerticalDragEnd: (details) {
-              controller.state.scrollbarDragging = false;
-              controller.addEvent(ScrollbarDragEvent(false));
+              stateController.state.scrollbarDragging = false;
+              stateController.addEvent(ScrollbarDragEvent(false));
             },
             onVerticalDragUpdate: (details) {
-              final info = controller.state.scrollbarInfo;
+              final info = stateController.state.scrollbarInfo;
               if (info == null) return;
 
-              final contentHeight = controller.contentHeight;
-              final viewportHeight = controller.state.recentViewportHeight;
-              final scrollbarHeight =
-                  controller.state.scrollbarHeight; // သို့မဟုတ် viewportHeight
+              final contentHeight = stateController.contentHeight;
+              final viewportHeight = stateController.state.recentViewportHeight;
+              final scrollbarHeight = stateController
+                  .state
+                  .scrollbarHeight; // သို့မဟုတ် viewportHeight
 
               // Max offsets
               final maxOffset = contentHeight - viewportHeight;
@@ -56,14 +89,23 @@ class ReaderScrollbar extends StatelessWidget {
               // Real Drag Delta Ratio
               final delta = (details.delta.dy / maxThumbOffset) * maxOffset;
 
-              controller.scrollBy(delta);
+              stateController.scrollBy(delta);
             },
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: .55),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
+            child:
+                customBuilder ??
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: col.primaryContainer,
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: [
+                      .new(
+                        color: col.onPrimaryContainer.withValues(alpha: .45),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                ),
           ),
         );
       },

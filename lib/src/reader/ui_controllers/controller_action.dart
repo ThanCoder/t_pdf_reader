@@ -6,6 +6,11 @@ class ControllerActions extends IControllerAction {
   ControllerActions(this._reader);
 
   @override
+  void scrollbarEnable(bool enable) {
+    _reader.scrollbarEnable(enable);
+  }
+
+  @override
   void jumpPage(int page) {
     _reader.jumpPage(page);
   }
@@ -71,5 +76,25 @@ class ControllerActions extends IControllerAction {
   @override
   void zoomOut() {
     _reader.zoomOut();
+  }
+
+  @override
+  void pageDown() {
+    _reader.pageDown();
+  }
+
+  @override
+  void pageUp() {
+    _reader.pageUp();
+  }
+
+  @override
+  void scrollDown() {
+    _reader.scrollDown();
+  }
+
+  @override
+  void scrollUp() {
+    _reader.scrollUp();
   }
 }
