@@ -141,7 +141,6 @@ class _ReaderItemState extends State<ReaderItem> {
 
   @override
   Widget build(BuildContext context) {
-    final col = Theme.of(context).colorScheme;
     final footerBuilder = widget.controller.widgetBuilder.footerBuilder;
     // final page = widget.offset.pageIndex + 1;
     return Column(
