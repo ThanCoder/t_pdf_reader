@@ -13,7 +13,6 @@ class ControllerDetached extends ControllerLifecycleEvent {
 }
 
 sealed class ITPdfController {
-
   final _con = StreamController<ControllerLifecycleEvent>.broadcast();
   Stream<ControllerLifecycleEvent> get lifecycle => _con.stream;
   Stream<ControllerAttached> get attached => lifecycle
@@ -31,7 +30,8 @@ sealed class ITPdfController {
   ReaderStateController? _reader;
 
   void _attach(ReaderStateController reader) {
-    assert(_reader == null, 'Controller is already attached.');
+    // assert(_reader == null, 'Controller is already attached.');
+    if (_reader != null) return;
     _reader = reader;
 
     state = ControllerState(reader);

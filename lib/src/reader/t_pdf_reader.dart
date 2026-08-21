@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
+import 'package:t_pdf_reader/src/reader/controllers/types/page_offset.dart';
 import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/controller_stream.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/empty_controllers/controller_stream_empty.dart';

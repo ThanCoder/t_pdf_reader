@@ -141,17 +141,53 @@ class _ReaderItemState extends State<ReaderItem> {
 
   @override
   Widget build(BuildContext context) {
+    final col = Theme.of(context).colorScheme;
     final footerBuilder = widget.controller.widgetBuilder.footerBuilder;
-    final page = widget.offset.pageIndex + 1;
+    // final page = widget.offset.pageIndex + 1;
     return Column(
       children: [
         Expanded(child: _image()),
-        if (footerBuilder != null)
-          footerBuilder(context, page)
-        else
-          Text('Page: $page'),
+        if (footerBuilder != null) footerBuilder(context, widget.offset),
+        // Container(
+        //   width: widget.offset.width,
+        //   color: Colors.white,
+        //   child: Center(
+        //     child: Text('Page: $page', style: TextStyle(color: Colors.black)),
+        //   ),
+        // ),
       ],
     );
+    // return Stack(
+    //   children: [
+    //     Positioned.fill(child: _image()),
+    //     if (footerBuilder != null)
+    //       Positioned(
+    //         bottom: 0,
+    //         left: 0,
+    //         right: 0,
+    //         child: footerBuilder(context, page),
+    //       )
+    //     else
+    //       Positioned(
+    //         bottom: 0,
+    //         left: 0,
+    //         right: 0,
+    //         child: Center(
+    //           child: Container(
+    //             padding: .symmetric(vertical: 4, horizontal: 8),
+    //             decoration: BoxDecoration(
+    //               color: Colors.white,
+    //               borderRadius: .circular(15),
+    //             ),
+    //             child: Text(
+    //               'Page: $page',
+    //               style: TextStyle(color: Colors.black),
+    //             ),
+    //           ),
+    //         ),
+    //       ),
+    //   ],
+    // );
   }
 
   Widget _image() {

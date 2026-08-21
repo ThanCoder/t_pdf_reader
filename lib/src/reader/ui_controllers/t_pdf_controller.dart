@@ -24,7 +24,7 @@ class TPdfEventBuilder {
 }
 
 class TPdfWidgetBuilder {
-  final Widget Function(BuildContext context, int page)? footerBuilder;
+  final Widget Function(BuildContext context, PageOffset pageOffset)? footerBuilder;
   final ScrollbarWidgetBuilder Function(BuildContext context, int page)?
   scrollbarBuilder;
   final Widget Function(BuildContext context, bool isLoading, double? progress)?
