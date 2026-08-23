@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:desktop_drop/desktop_drop.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:t_pdf_reader_example/my_reader.dart';
 import 'package:t_pdf_reader_example/thumb_page.dart';
 import 'package:than_pkg/than_pkg.dart';
