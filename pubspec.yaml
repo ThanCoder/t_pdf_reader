@@ -14,9 +14,6 @@ dependencies:
   pdfium_dart: ^0.2.5
   than_pdf_engine: ^1.2.0
 
-
-
-  material_ui: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
