@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:t_pdf_reader/src/reader/controllers/reader_state_controller.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
 
 class PdfZoomListener extends StatelessWidget {
@@ -9,7 +10,9 @@ class PdfZoomListener extends StatelessWidget {
   Widget build(BuildContext context) {
     ColorScheme col = Theme.of(context).colorScheme;
     return StreamBuilder(
-      stream: controller.stream.zoomChanged,
+      stream: controller.stream.all.where(
+        (e) => e is ZoomChanged || e is ScaleChanged,
+      ),
       builder: (context, asyncSnapshot) {
         return Container(
           padding: .symmetric(vertical: 6, horizontal: 8),

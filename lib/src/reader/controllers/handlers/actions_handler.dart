@@ -1,6 +1,30 @@
 part of '../reader_state_controller.dart';
 
 mixin ActionsHandler on IReaderStateController {
+  void setPreloadPageCount(int preloadPageCount) {
+    state.preloadPageCount = preloadPageCount;
+    addEvent(PreloadPageCountChanged());
+  }
+
+  void setPageImageHeightQuality(int pageImageHeightQuality) {
+    state.pageImageHeightQuality = pageImageHeightQuality;
+    addEvent(PageRenderImageQualityChanged());
+  }
+
+  void setPageImageLowQuality(int pageImageLowQuality) {
+    state.pageImageLowQuality = pageImageLowQuality;
+    addEvent(PageRenderImageQualityChanged());
+  }
+
+  void setRenderImageType(PageRenderImageType type) {
+    state.renderImageType = type;
+    addEvent(PageRenderImageTypeChanged());
+  }
+
+  void clearImageCache() {
+    pageImageCache.clear();
+  }
+
   void scrollUp() {
     scrollBy(-state.pageScrollStep);
   }

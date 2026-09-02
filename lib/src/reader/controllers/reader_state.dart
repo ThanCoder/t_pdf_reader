@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
+import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 
 class ReaderState {
   double currentOffset = 0;
@@ -21,6 +22,10 @@ class ReaderState {
   double zoomSensitivity = 0.3;
   bool isReady = false;
   bool scrollbarEnable = true;
-
   double pageScrollStep = 60;
+
+  int preloadPageCount = 2;
+  int pageImageHeightQuality = 90;
+  int pageImageLowQuality = 20;
+  PageRenderImageType renderImageType = .jpg;
 }

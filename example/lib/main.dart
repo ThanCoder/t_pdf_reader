@@ -15,7 +15,7 @@ void main() async {
     MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const MyApp(),
-      theme: ThemeData.light(),
+      theme: ThemeData.dark(),
     ),
   );
 }
@@ -30,7 +30,17 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool dropEnable = true;
 
-  final dir = Directory('/home/thancoder/Documents/pdf');
+  final dir = Directory('/home/thancoder/Documents/PDF');
+  List<String> files = [];
+  @override
+  void initState() {
+    super.initState();
+    for (var f in dir.listSync()) {
+      if (!f.path.endsWith('.pdf')) continue;
+      files.add(f.path);
+    }
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,28 +82,23 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget get bodyWidget {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ListTile(
-            title: Text('Thumbnail Gen'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ThumbPage(dir: dir)),
-              );
-            },
-          ),
-          routeWidget(
-            '/home/thancoder/Documents/pdf/တာတေ၊_မဖဲဝါကိုကိုက်တဲတစ္ဆေ.pdf',
-          ),
-          routeWidget('/home/thancoder/Documents/pdf/test2.pdf'),
-          routeWidget('/home/thancoder/Documents/pdf/test.pdf'),
-          routeWidget('/home/thancoder/Documents/Telegram Desktop/test2.pdf'),
-          routeWidget('/home/thancoder/Documents/Telegram Desktop/test3.pdf'),
-          routeWidget('/storage/emulated/0/test.pdf'),
-        ],
+    return SingleChildScrollView(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ListTile(
+              title: Text('Thumbnail Gen'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ThumbPage(dir: dir)),
+                );
+              },
+            ),
+            ...files.map((e) => routeWidget(e)),
+          ],
+        ),
       ),
     );
   }

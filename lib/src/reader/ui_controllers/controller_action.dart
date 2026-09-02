@@ -1,5 +1,6 @@
 import 'package:t_pdf_reader/src/reader/controllers/reader_state_controller.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/interfaces/i_controller_action.dart';
+import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 
 class ControllerActions extends IControllerAction {
   final ReaderStateController _reader;
@@ -96,5 +97,30 @@ class ControllerActions extends IControllerAction {
   @override
   void scrollUp() {
     _reader.scrollUp();
+  }
+
+  @override
+  void clearImageCache() {
+    _reader.clearImageCache();
+  }
+
+  @override
+  void setPageImageHeightQuality(int pageImageHeightQuality) {
+    _reader.setPageImageHeightQuality(pageImageHeightQuality);
+  }
+
+  @override
+  void setPageImageLowQuality(int pageImageLowQuality) {
+    _reader.setPageImageLowQuality(pageImageLowQuality);
+  }
+
+  @override
+  void setPreloadPageCount(int preloadPageCount) {
+    _reader.setPreloadPageCount(preloadPageCount);
+  }
+
+  @override
+  void setRenderImageType(PageRenderImageType type) {
+    _reader.setRenderImageType(type);
   }
 }

@@ -64,4 +64,14 @@ class ControllerStreamEmpty extends IControllerStream {
     configChanged: .empty(),
     remove: .empty(),
   );
+
+  @override
+  Stream<PageRenderImageQualityChanged> get pageRenderImageQualityChanged =>
+      .empty();
+
+  @override
+  Stream<PageRenderImageTypeChanged> get pageRenderImageTypeChanged => .empty();
+
+  @override
+  Stream<PreloadPageCountChanged> get preloadPageCountChanged => .empty();
 }

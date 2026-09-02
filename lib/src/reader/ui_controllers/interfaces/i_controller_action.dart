@@ -1,4 +1,11 @@
+import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
+
 abstract class IControllerAction {
+  void setPreloadPageCount(int preloadPageCount);
+  void setPageImageHeightQuality(int pageImageHeightQuality);
+  void setPageImageLowQuality(int pageImageLowQuality);
+  void setRenderImageType(PageRenderImageType type);
+
   void scrollUp();
   void scrollDown();
   void pageDown();
@@ -31,4 +38,5 @@ abstract class IControllerAction {
     int maxCount = 200,
     int maxSizeBytes = 10 * 1024 * 1024,
   });
+  void clearImageCache();
 }

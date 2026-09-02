@@ -22,6 +22,10 @@ abstract class IControllerStream {
   Stream<ScrollbarDragEvent> get scrollbarDragEvent;
   Stream<ReaderReady> get ready;
 
+  Stream<PageRenderImageTypeChanged> get pageRenderImageTypeChanged;
+  Stream<PageRenderImageQualityChanged> get pageRenderImageQualityChanged;
+  Stream<PreloadPageCountChanged> get preloadPageCountChanged;
+
   ImageCacheStream get imageCache;
 }
 

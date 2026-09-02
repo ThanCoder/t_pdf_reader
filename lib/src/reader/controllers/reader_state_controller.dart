@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:t_pdf_reader/src/reader/controllers/types/page_offset.dart';
+import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 import 'package:than_pdf_engine/core/models/page_size.dart';
 import 'package:t_pdf_reader/src/reader/controllers/reader_state.dart';
 import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
@@ -54,6 +55,7 @@ class ReaderStateController extends IReaderStateController
       pages: pageOffsets,
       scrollOffset: state.currentOffset,
       viewportHeight: state.recentViewportHeight,
+      preloadPageCount: state.preloadPageCount,
     );
     // current page event
     final currentPage = getCurrentPage();

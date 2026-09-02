@@ -1,8 +1,13 @@
-# 1.0.0
+# 1.1.0
+
++ Added Stream -> `PageRenderImageTypeChanged`,`PageRenderImageQualityChanged`,`PreloadPageCountChanged`
++ Some Widget Updated.
+
+## 1.0.0
 * Completed Changed Core. `TPdfReader`,`TPdfController`
 * Completed Changed `than_pdf_engine: ^1.2.0`
 
-# 0.5.0
+## 0.5.0
 
 + Updated `than_pdf_engine: ^0.5.0` 
 - Removed `dart_core_extensions`

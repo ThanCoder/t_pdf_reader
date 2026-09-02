@@ -112,8 +112,8 @@ class _TPdfReaderState extends State<TPdfReader>
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      if (controller.widgetBuilder.lodingBuilder != null) {
-        return controller.widgetBuilder.lodingBuilder!(
+      if (controller.widgetBuilder.loadingBuilder != null) {
+        return controller.widgetBuilder.loadingBuilder!(
           context,
           isLoading,
           null,

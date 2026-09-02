@@ -1,8 +1,14 @@
 import 'package:t_pdf_reader/src/reader/ui_controllers/interfaces/i_controller_action.dart';
+import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 
 class ControllerActionEmpty extends IControllerAction {
   Never _notAttached() {
     throw StateError('TPdfController is not attached to a TPdfReader.');
+  }
+
+  @override
+  void clearImageCache() {
+    _notAttached();
   }
 
   @override
@@ -95,6 +101,26 @@ class ControllerActionEmpty extends IControllerAction {
 
   @override
   void scrollUp() {
+    _notAttached();
+  }
+
+  @override
+  void setPageImageHeightQuality(int pageImageHeightQuality) {
+    _notAttached();
+  }
+
+  @override
+  void setPageImageLowQuality(int pageImageLowQuality) {
+    _notAttached();
+  }
+
+  @override
+  void setPreloadPageCount(int preloadPageCount) {
+    _notAttached();
+  }
+
+  @override
+  void setRenderImageType(PageRenderImageType type) {
     _notAttached();
   }
 }

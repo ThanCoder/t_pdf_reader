@@ -24,18 +24,21 @@ class TPdfEventBuilder {
 }
 
 class TPdfWidgetBuilder {
-  final Widget Function(BuildContext context, PageOffset pageOffset)? footerBuilder;
+  final Widget Function(BuildContext context, PageOffset pageOffset)?
+  footerBuilder;
   final ScrollbarWidgetBuilder Function(BuildContext context, int page)?
   scrollbarBuilder;
   final Widget Function(BuildContext context, bool isLoading, double? progress)?
-  lodingBuilder;
+  loadingBuilder;
   final Widget Function(BuildContext context, String errorMessage)?
   errorBuilder;
+  final Widget Function(BuildContext context)? placeholderBuilder;
   const TPdfWidgetBuilder({
     this.footerBuilder,
     this.scrollbarBuilder,
-    this.lodingBuilder,
+    this.loadingBuilder,
     this.errorBuilder,
+    this.placeholderBuilder,
   });
 }
 

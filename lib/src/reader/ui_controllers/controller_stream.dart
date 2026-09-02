@@ -82,4 +82,16 @@ class ControllerStream extends IControllerStream {
     configChanged: _cacheStream.whereType<PageImageCacheConfigChanged>(),
     remove: _cacheStream.whereType<PageImageCacheRemove>(),
   );
+
+  @override
+  Stream<PageRenderImageQualityChanged> get pageRenderImageQualityChanged =>
+      _stream.whereType<PageRenderImageQualityChanged>();
+
+  @override
+  Stream<PageRenderImageTypeChanged> get pageRenderImageTypeChanged =>
+      _stream.whereType<PageRenderImageTypeChanged>();
+
+  @override
+  Stream<PreloadPageCountChanged> get preloadPageCountChanged =>
+      _stream.whereType<PreloadPageCountChanged>();
 }

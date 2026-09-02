@@ -51,7 +51,8 @@ class _ReaderItemState extends State<ReaderItem> {
               e is UserJumpChanged,
         )
         .listen((event) {
-          if (lastQuality == 90 &&
+          if (lastQuality ==
+                  widget.stateController.state.pageImageHeightQuality &&
               lastWidth == widget.offset.width &&
               lastHeight == widget.offset.height) {
             return;
@@ -59,14 +60,16 @@ class _ReaderItemState extends State<ReaderItem> {
           // print(
           //   'Dev: need to changed image cache: page: ${widget.offset.pageIndex} - $event',
           // );
-          _reloadForNewResolution(quality: 90);
+          _reloadForNewResolution(
+            quality: widget.stateController.state.pageImageHeightQuality,
+          );
         });
-    if (lastQuality == 90 &&
+    if (lastQuality == widget.stateController.state.pageImageHeightQuality &&
         lastWidth == widget.offset.width &&
         lastHeight == widget.offset.height) {
       return;
     }
-    _load(quality: 20);
+    _load(quality: widget.stateController.state.pageImageLowQuality);
   }
 
   @override
@@ -75,15 +78,12 @@ class _ReaderItemState extends State<ReaderItem> {
     super.dispose();
   }
 
-  // Zoom ပြောင်းသွားပါက လက်ရှိ ပုံဟောင်းကို ခေတ္တပြထားပြီး Cache ဖျက်ကာ Resolution အသစ် ဆွဲပေးမည့် Function
   void _reloadForNewResolution({required int quality}) {
-    // လက်ရှိ Image ကို Old Image အဖြစ် ခေတ္တ ထိန်းထားပေးပါမည် (Screen ပေါ်တွင် ဝါးမသွားစေရန်)
     if (_newImage != null) {
       _oldImage = _newImage;
       _newImage = null;
     }
     widget.imageCache.remove(widget.offset.pageIndex);
-    // widget.imageCache.clear();
     _load(quality: quality);
   }
 
@@ -116,6 +116,7 @@ class _ReaderItemState extends State<ReaderItem> {
       quality: quality,
       targetHeight: height.toInt(),
       targetWidth: width.toInt(),
+      renderImageType: widget.stateController.state.renderImageType,
     );
 
     if (!mounted || requestId != _requestId || res.isErr) {
@@ -147,46 +148,8 @@ class _ReaderItemState extends State<ReaderItem> {
       children: [
         Expanded(child: _image()),
         if (footerBuilder != null) footerBuilder(context, widget.offset),
-        // Container(
-        //   width: widget.offset.width,
-        //   color: Colors.white,
-        //   child: Center(
-        //     child: Text('Page: $page', style: TextStyle(color: Colors.black)),
-        //   ),
-        // ),
       ],
     );
-    // return Stack(
-    //   children: [
-    //     Positioned.fill(child: _image()),
-    //     if (footerBuilder != null)
-    //       Positioned(
-    //         bottom: 0,
-    //         left: 0,
-    //         right: 0,
-    //         child: footerBuilder(context, page),
-    //       )
-    //     else
-    //       Positioned(
-    //         bottom: 0,
-    //         left: 0,
-    //         right: 0,
-    //         child: Center(
-    //           child: Container(
-    //             padding: .symmetric(vertical: 4, horizontal: 8),
-    //             decoration: BoxDecoration(
-    //               color: Colors.white,
-    //               borderRadius: .circular(15),
-    //             ),
-    //             child: Text(
-    //               'Page: $page',
-    //               style: TextStyle(color: Colors.black),
-    //             ),
-    //           ),
-    //         ),
-    //       ),
-    //   ],
-    // );
   }
 
   Widget _image() {
@@ -195,6 +158,10 @@ class _ReaderItemState extends State<ReaderItem> {
 
     if (oldImage == null && newImage == null) {
       final iconSize = min(widget.offset.width, widget.offset.height) * 0.4;
+      // placeholder widget
+      if (widget.controller.widgetBuilder.placeholderBuilder != null) {
+        return widget.controller.widgetBuilder.placeholderBuilder!(context);
+      }
       return Icon(Icons.image_not_supported_rounded, size: iconSize);
     }
 

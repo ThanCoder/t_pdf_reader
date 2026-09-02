@@ -1,6 +1,7 @@
 import 'package:t_pdf_reader/src/reader/controllers/reader_state_controller.dart';
 import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/interfaces/i_controller_state.dart';
+import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 
 class ControllerState extends IControllerState {
   final ReaderStateController _reader;
@@ -67,4 +68,16 @@ class ControllerState extends IControllerState {
 
   @override
   double get pageScrollStep => _reader.state.pageScrollStep;
+
+  @override
+  int get pageImageHeightQuality => _reader.state.pageImageHeightQuality;
+
+  @override
+  int get pageImageLowQuality => _reader.state.pageImageLowQuality;
+
+  @override
+  int get preloadPageCount => _reader.state.preloadPageCount;
+
+  @override
+  PageRenderImageType get renderImageType => _reader.state.renderImageType;
 }

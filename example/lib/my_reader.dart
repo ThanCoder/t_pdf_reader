@@ -19,6 +19,7 @@ class _MyReaderState extends State<MyReader> {
   void initState() {
     controller = TPdfController(
       widgetBuilder: TPdfWidgetBuilder(
+        placeholderBuilder: (context) => Placeholder(),
         footerBuilder: (context, pageOffset) => Container(
           width: pageOffset.width,
           color: Colors.white,
