@@ -1,6 +1,7 @@
 # 1.1.0
 
 + Added Stream -> `PageRenderImageTypeChanged`,`PageRenderImageQualityChanged`,`PreloadPageCountChanged`
++ Added Widgets -> `PdfReloadPageView`,`PdfRenderImageTypeView`,`PdfVisiablePageView`
 + Some Widget Updated.
 
 ## 1.0.0

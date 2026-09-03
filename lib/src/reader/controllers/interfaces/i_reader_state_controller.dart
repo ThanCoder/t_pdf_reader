@@ -1,15 +1,18 @@
 part of '../reader_state_controller.dart';
 
 sealed class IReaderStateController {
-  ReaderState get state;
-  double get contentHeight;
-  List<PageOffset> get pageOffsets;
-  List<PageOffset> get visiblePages;
-  List<PageSize> get pages;
+  List<PageOffset> visiblePages = [];
+  List<PageSize> pages = [];
+  List<PageOffset> pageOffsets = [];
+  ReaderState state = .new();
+
+  double get contentHeight {
+    if (pageOffsets.isEmpty) return 0;
+    return pageOffsets.last.bottom.toDouble();
+  }
+
   void scrollBy(double dy);
 
-  set pageOffsets(List<PageOffset> val);
-  set visiblePages(List<PageOffset> val);
   void updateVisiablePages();
   int? getCurrentPage();
 
@@ -24,5 +27,11 @@ sealed class IReaderStateController {
 
   void dipose() {
     _con.close();
+  }
+
+  double getPageOffsetY(int pageIndex) {
+    final index = pageOffsets.indexWhere((e) => e.pageIndex == pageIndex);
+    if (index == -1) return -1;
+    return pageOffsets[index].top;
   }
 }

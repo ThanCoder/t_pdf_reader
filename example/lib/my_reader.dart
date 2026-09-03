@@ -19,7 +19,7 @@ class _MyReaderState extends State<MyReader> {
   void initState() {
     controller = TPdfController(
       widgetBuilder: TPdfWidgetBuilder(
-        placeholderBuilder: (context) => Placeholder(),
+        // placeholderBuilder: (context) => Placeholder(),
         footerBuilder: (context, pageOffset) => Container(
           width: pageOffset.width,
           color: Colors.white,
@@ -30,12 +30,12 @@ class _MyReaderState extends State<MyReader> {
             ),
           ),
         ),
-        scrollbarBuilder: (context, page) {
-          return .new(
-            widgetInfo: .new(thumbWidth: 20, thumbHeight: 40),
-            builder: defaultScrollbarGlow(thumbWidth: 20, thumbHeight: 40),
-          );
-        },
+        // scrollbarBuilder: (context, page) {
+        //   return .new(
+        //     widgetInfo: .new(thumbWidth: 20, thumbHeight: 40),
+        //     builder: defaultScrollbarGlow(thumbWidth: 20, thumbHeight: 40),
+        //   );
+        // },
       ),
       eventBuilder: .new(
         onKeyEventAfterConfig: (node, event) {
@@ -77,7 +77,7 @@ class _MyReaderState extends State<MyReader> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: .dark(),
+      data: darkMode ? .dark() : .light(),
       child: Scaffold(
         appBar: AppBar(title: Text('Pdf Reader')),
         body: StreamBuilder(
@@ -141,6 +141,10 @@ class _MyReaderState extends State<MyReader> {
                 ),
                 PdfScrollbarToggler(controller: controller),
                 PdfCacheImageListener(controller: controller),
+
+                PdfRenderImageTypeView(controller: controller),
+                PdfReloadPageView(controller: controller),
+                PdfVisiablePageView(controller: controller),
               ],
             ),
           ),

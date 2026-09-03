@@ -23,9 +23,10 @@ class ReaderState {
   bool isReady = false;
   bool scrollbarEnable = true;
   double pageScrollStep = 60;
-
   int preloadPageCount = 2;
   int pageImageHeightQuality = 90;
   int pageImageLowQuality = 20;
   PageRenderImageType renderImageType = .jpg;
+
+  int visiablePagesCount = 0;
 }

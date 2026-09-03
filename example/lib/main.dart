@@ -15,7 +15,7 @@ void main() async {
     MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const MyApp(),
-      theme: ThemeData.dark(),
+      theme: ThemeData.light(),
     ),
   );
 }

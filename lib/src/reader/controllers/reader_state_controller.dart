@@ -26,15 +26,27 @@ class ReaderStateController extends IReaderStateController
         LayoutHandler,
         ActionsHandler {
   @override
-  List<PageOffset> visiblePages = [];
-  @override
-  List<PageSize> pages = [];
-  @override
-  List<PageOffset> pageOffsets = [];
-  @override
-  ReaderState state = .new();
+  int? getCurrentPage() {
+    final pages = visiblePages;
+    if (pages.isEmpty) return null;
 
-  // void setConfig() {}
+    final center = state.currentOffset + state.recentViewportHeight / 2;
+
+    PageOffset closest = pages.first;
+    var minDistance = double.infinity;
+
+    for (final page in pages) {
+      final pageCenter = (page.top + page.bottom) / 2;
+      final distance = (pageCenter - center).abs();
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = page;
+      }
+    }
+
+    return closest.pageIndex;
+  }
 
   @override
   void scrollBy(double dy) {
@@ -47,7 +59,6 @@ class ReaderStateController extends IReaderStateController
 
     updateVisiablePages();
   }
-  //**********************UI Visiable Page Changed**************************************** */
 
   @override
   void updateVisiablePages() {
@@ -74,44 +85,7 @@ class ReaderStateController extends IReaderStateController
         _con.add(ScrollbarUiChanged());
       }
     }
-
+    state.visiablePagesCount = visiblePages.length;
     _con.add(UpdateVisiblePages());
-  }
-
-  @override
-  double get contentHeight {
-    if (pageOffsets.isEmpty) return 0;
-    return pageOffsets.last.bottom.toDouble();
-  }
-
-  @override
-  int? getCurrentPage() {
-    final pages = visiblePages;
-    if (pages.isEmpty) return null;
-
-    final center = state.currentOffset + state.recentViewportHeight / 2;
-
-    PageOffset closest = pages.first;
-    var minDistance = double.infinity;
-
-    for (final page in pages) {
-      final pageCenter = (page.top + page.bottom) / 2;
-      final distance = (pageCenter - center).abs();
-
-      if (distance < minDistance) {
-        minDistance = distance;
-        closest = page;
-      }
-    }
-
-    return closest.pageIndex;
-  }
-
-  //**********************Page Jump**************************************** */
-
-  double getPageOffsetY(int pageIndex) {
-    final index = pageOffsets.indexWhere((e) => e.pageIndex == pageIndex);
-    if (index == -1) return -1;
-    return pageOffsets[index].top;
   }
 }
