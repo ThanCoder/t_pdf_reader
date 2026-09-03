@@ -11,10 +11,10 @@ sealed class ReaderEvent {
 }
 
 class PageRenderImageTypeChanged extends ReaderEvent {}
+
 class PageRenderImageQualityChanged extends ReaderEvent {}
+
 class PreloadPageCountChanged extends ReaderEvent {}
-
-
 
 class UpdateViewort extends ReaderEvent {}
 
@@ -65,4 +65,3 @@ class ScrollbarDragEvent extends ReaderEvent {
 }
 
 class ReaderReady extends ReaderEvent {}
-

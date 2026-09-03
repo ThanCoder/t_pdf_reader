@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
 
-class PdfReloadPageView extends StatelessWidget {
-  const PdfReloadPageView({super.key, required this.controller, this.onTap});
+class PdfPreloadPageView extends StatelessWidget {
+  const PdfPreloadPageView({super.key, required this.controller, this.onTap});
   final TPdfController controller;
   final void Function()? onTap;
 

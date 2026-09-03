@@ -5,6 +5,6 @@ export 'pdf_zoom_listener.dart';
 export 'pdf_zoom_out.dart';
 export 'pdf_page_jump_dialog.dart';
 export 'pdf_scrollbar_toggler.dart';
-export 'pdf_reload_page_view.dart';
+export 'pdf_preload_page_view.dart';
 export 'pdf_visiable_page_view.dart';
 export 'pdf_render_image_type_view.dart';

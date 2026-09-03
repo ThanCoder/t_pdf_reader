@@ -51,17 +51,17 @@ class _MyReaderState extends State<MyReader> {
     );
     controller.attached.listen((_) {
       controller.stream.ready.listen((event) {
+        controller.action.jumpPage(4);
         controller.action.setFitZoom();
         print('reader ready');
-        // controller.action.jumpPage(100);
         // controller.action.setZoom(1.7000000000000006);
         // controller.action.
       });
-      controller.stream.zoomChanged.listen((_) {
-        print(
-          'zoom: ${controller.state.zoom} - currentOffsetX: ${controller.state.currentOffsetX}',
-        );
-      });
+      // controller.stream.zoomChanged.listen((_) {
+      //   print(
+      //     'zoom: ${controller.state.zoom} - currentOffsetX: ${controller.state.currentOffsetX}',
+      //   );
+      // });
     });
     super.initState();
   }
@@ -143,7 +143,7 @@ class _MyReaderState extends State<MyReader> {
                 PdfCacheImageListener(controller: controller),
 
                 PdfRenderImageTypeView(controller: controller),
-                PdfReloadPageView(controller: controller),
+                PdfPreloadPageView(controller: controller),
                 PdfVisiablePageView(controller: controller),
               ],
             ),
