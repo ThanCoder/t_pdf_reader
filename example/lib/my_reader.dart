@@ -144,7 +144,7 @@ class _MyReaderState extends State<MyReader> {
 
                 PdfRenderImageTypeView(controller: controller),
                 PdfPreloadPageView(controller: controller),
-                PdfVisiablePageView(controller: controller),
+                PdfVisiableCachedPageView(controller: controller),
               ],
             ),
           ),

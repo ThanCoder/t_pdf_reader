@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
 
-class PdfVisiablePageView extends StatelessWidget {
-  const PdfVisiablePageView({super.key, required this.controller});
+class PdfVisiableCachedPageView extends StatelessWidget {
+  const PdfVisiableCachedPageView({super.key, required this.controller});
   final TPdfController controller;
 
   @override
@@ -18,7 +18,7 @@ class PdfVisiablePageView extends StatelessWidget {
             borderRadius: .circular(15),
           ),
           child: Text(
-            'Visiable: ${controller.state.visiablePagesCount}',
+            'Cached: ${controller.state.visiableCachedPagesCount}',
             style: TextStyle(color: col.onSurface, fontWeight: .w600),
           ),
         );

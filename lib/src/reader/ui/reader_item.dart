@@ -30,98 +30,204 @@ class ReaderItem extends StatefulWidget {
 }
 
 class _ReaderItemState extends State<ReaderItem> {
-  Uint8List? _image;
+  Uint8List? _lowQualityImage;
+  Uint8List? _highQualityImage;
 
   StreamSubscription? _subscription;
-  Timer? _qualityTimer;
+  StreamSubscription? _visiblePageSub;
 
-  static const _qualityDebounce = Duration(milliseconds: 150);
+  Timer? _lowQualityTimer;
+  Timer? _highQualityTimer;
 
-  int _requestId = 0;
+  int _lowRequestId = 0;
+  int _highRequestId = 0;
 
-  int? _lastQuality;
   double? _lastWidth;
   double? _lastHeight;
-  PageRenderImageType? _lastImageType;
+
+  /// User zoom / scale လုပ်နေတုန်း
+  /// ချက်ချင်း LOW render မလုပ်ဘဲ
+  /// ဒီအချိန်လောက် ငြိမ်သွားမှ render လုပ်မယ်။
+  static const _lowQualityDelay = Duration(milliseconds: 150);
+
+  /// LOW ပြီးသွားပြီး
+  /// HIGH မစခင် စောင့်မယ့်အချိန်။
+  static const _highQualityDelay = Duration(milliseconds: 200);
 
   @override
   void initState() {
     super.initState();
 
-    _subscription = widget.stateController.stream
-        //.whereType<Object>() // ကိုယ့် stream type အတိုင်း ပြင်နိုင်
-        .listen(_onStateEvent);
+    // --------------------------------
+    // Visible page event
+    // --------------------------------
 
-    // Initial render = low quality
-    _load(quality: widget.stateController.state.pageImageLowQuality);
+    _visiblePageSub = widget.stateController.stream
+        .whereType<UpdateVisiblePages>()
+        .listen((_) {
+          _checkVisible();
+        });
+
+    // --------------------------------
+    // State events
+    // --------------------------------
+
+    _subscription = widget.stateController.stream.listen(_onStateEvent);
+
+    // --------------------------------
+    // Initial LOW
+    // --------------------------------
+
+    _loadLowQuality();
   }
 
-  void _onStateEvent(Object event) {
-    if (event is ZoomChanged || event is MobileScaleChanged) {
-      _scheduleQualityReload();
-      return;
-    }
+  // ============================================================
+  // Visible Page
+  // ============================================================
 
-    if (event is ScrollEnd || event is UserJumpChanged) {
-      _qualityTimer?.cancel();
-
-      // Event ဖြစ်တဲ့အချိန်မှာ latest state ကိုဖတ်
-      _reloadHeightQuality();
-    }
-  }
-
-  void _scheduleQualityReload() {
-    _qualityTimer?.cancel();
-
-    _qualityTimer = Timer(_qualityDebounce, _reloadHeightQuality);
-  }
-
-  void _reloadHeightQuality() {
+  void _checkVisible() {
     if (!mounted) {
       return;
     }
 
-    final quality = widget.stateController.state.pageImageHeightQuality;
+    final visiblePages = widget.stateController.state.visiablePages;
 
-    _load(quality: quality);
-  }
+    final pageIndex = widget.offset.pageIndex;
 
-  PageRenderImageType _resolveImageType(int quality) {
-    final state = widget.stateController.state;
+    if (!visiblePages.contains(pageIndex)) {
+      // Visible မဟုတ်တော့ရင် pending HIGH ကို cancel
+      // လုပ်ထားတာက ပိုကောင်းတယ်။
+      _highQualityTimer?.cancel();
 
-    // Low quality = JPG only
-    if (quality == state.pageImageLowQuality) {
-      return PageRenderImageType.jpg;
+      return;
     }
 
-    // High quality = user configured type
-    return state.renderImageType;
+    // LOW ရပြီးမှ HIGH schedule လုပ်မယ်။
+    if (_lowQualityImage != null) {
+      _scheduleHighQuality();
+    }
   }
 
-  Future<void> _load({required int quality}) async {
-    // final state = widget.stateController.state;
+  // ============================================================
+  // State Event
+  // ============================================================
+
+  void _onStateEvent(Object event) {
+    // --------------------------------
+    // Zoom / Mobile Scale
+    // --------------------------------
+
+    if (event is ZoomChanged || event is MobileScaleChanged) {
+      _scheduleLowQuality();
+      return;
+    }
+
+    // --------------------------------
+    // User Jump
+    // --------------------------------
+
+    if (event is UserJumpChanged) {
+      _scheduleLowQuality();
+      return;
+    }
+
+    // --------------------------------
+    // Scroll End
+    // --------------------------------
+
+    if (event is ScrollEnd) {
+      _scheduleLowQuality();
+      return;
+    }
+  }
+
+  // ============================================================
+  // Schedule LOW
+  // ============================================================
+
+  void _scheduleLowQuality() {
+    if (!mounted) {
+      return;
+    }
+
+    // User က ဆက် zoom / scale / jump လုပ်နေသရွေ့
+    // timer ကို reset လုပ်မယ်။
+    _lowQualityTimer?.cancel();
+
+    // HIGH pending ဖြစ်နေရင်လည်း cancel။
+    //
+    // လက်ရှိ layout မတည်ငြိမ်သေးတဲ့အတွက်
+    // HQ ကို မစသင့်သေးဘူး။
+    _highQualityTimer?.cancel();
+
+    _lowQualityTimer = Timer(_lowQualityDelay, _loadLowQuality);
+  }
+
+  // ============================================================
+  // Schedule HIGH
+  // ============================================================
+
+  void _scheduleHighQuality() {
+    if (!mounted) {
+      return;
+    }
+
+    if (_lowQualityImage == null) {
+      return;
+    }
+
+    if (_highQualityImage != null) {
+      return;
+    }
+
+    final visiblePages = widget.stateController.state.visiablePages;
+
+    if (!visiblePages.contains(widget.offset.pageIndex)) {
+      return;
+    }
+
+    _highQualityTimer?.cancel();
+
+    _highQualityTimer = Timer(_highQualityDelay, _loadHighQuality);
+  }
+
+  // ============================================================
+  // LOW QUALITY
+  // ============================================================
+
+  Future<void> _loadLowQuality() async {
+    if (!mounted) {
+      return;
+    }
+
+    final state = widget.stateController.state;
+
+    final quality = state.pageImageLowQuality;
 
     final width = widget.offset.width;
     final height = widget.offset.height;
 
-    final imageType = _resolveImageType(quality);
+    const imageType = PageRenderImageType.jpg;
 
-    // အတူတူ image ကို ပြန်မ render နဲ့
-    if (_lastQuality == quality &&
-        _lastWidth == width &&
-        _lastHeight == height &&
-        _lastImageType == imageType) {
+    // --------------------------------
+    // Same size
+    // --------------------------------
+
+    if (_lastWidth == width && _lastHeight == height) {
+      if (_lowQualityImage != null) {
+        _scheduleHighQuality();
+      }
+
       return;
     }
 
     final pageIndex = widget.offset.pageIndex;
 
-    // New request generation
-    final requestId = ++_requestId;
+    final requestId = ++_lowRequestId;
 
-    // -------------------------
+    // --------------------------------
     // Cache
-    // -------------------------
+    // --------------------------------
 
     final cached = widget.imageCache.get(
       pageIndex,
@@ -132,25 +238,32 @@ class _ReaderItemState extends State<ReaderItem> {
     );
 
     if (cached != null) {
-      if (!mounted || requestId != _requestId) {
+      if (!mounted || requestId != _lowRequestId) {
         return;
       }
 
-      _lastQuality = quality;
       _lastWidth = width;
       _lastHeight = height;
-      _lastImageType = imageType;
+
+      // Size ပြောင်းသွားတဲ့အတွက်
+      // old HQ ကို မပြသင့်တော့ဘူး။
+      _highQualityImage = null;
+      _highRequestId++;
 
       setState(() {
-        _image = cached;
+        _lowQualityImage = cached;
       });
+
+      // LOW ပြီးပြီ။
+      // Visible ဖြစ်ရင် HQ schedule.
+      _scheduleHighQuality();
 
       return;
     }
 
-    // -------------------------
-    // Render
-    // -------------------------
+    // --------------------------------
+    // Render LOW
+    // --------------------------------
 
     final image = await widget.worker.getImage(
       pageIndex,
@@ -160,59 +273,153 @@ class _ReaderItemState extends State<ReaderItem> {
       renderImageType: imageType,
     );
 
-    // Request အသစ်တစ်ခုက ဒီ request ကို ကျော်သွားပြီ
-    if (!mounted || requestId != _requestId) {
+    if (!mounted || requestId != _lowRequestId) {
       return;
     }
 
-    // -------------------------
-    // Cache
-    // -------------------------
+    final bytes = image.unwrap();
+
+    // --------------------------------
+    // Cache LOW
+    // --------------------------------
 
     widget.imageCache.put(
       pageIndex,
-      image.unwrap(),
+      bytes,
       width: width,
       height: height,
       quality: quality,
       imageType: imageType,
     );
 
-    _lastQuality = quality;
     _lastWidth = width;
     _lastHeight = height;
-    _lastImageType = imageType;
+
+    // Old HQ ကို invalidate လုပ်မယ်။
+    _highQualityImage = null;
+    _highRequestId++;
 
     setState(() {
-      _image = image.unwrap();
+      _lowQualityImage = bytes;
     });
+
+    // --------------------------------
+    // LOW ပြီးပြီ
+    // --------------------------------
+
+    _scheduleHighQuality();
   }
+
+  // ============================================================
+  // HIGH QUALITY
+  // ============================================================
+
+  Future<void> _loadHighQuality() async {
+    if (!mounted) {
+      return;
+    }
+
+    // LOW မပြီးသေးရင် မလုပ်ပါနဲ့။
+    if (_lowQualityImage == null) {
+      return;
+    }
+
+    // HIGH ရှိပြီးသား
+    if (_highQualityImage != null) {
+      return;
+    }
+
+    // လက်ရှိ page က REAL visible ဖြစ်သေးလား
+    final visiblePages = widget.stateController.state.visiablePages;
+
+    if (!visiblePages.contains(widget.offset.pageIndex)) {
+      return;
+    }
+
+    final state = widget.stateController.state;
+
+    final quality = state.pageImageHeightQuality;
+
+    final width = widget.offset.width;
+    final height = widget.offset.height;
+
+    final imageType = state.renderImageType;
+
+    final pageIndex = widget.offset.pageIndex;
+
+    final requestId = ++_highRequestId;
+
+    // --------------------------------
+    // Render HIGH
+    // --------------------------------
+
+    final image = await widget.worker.getImage(
+      pageIndex,
+      quality: quality,
+      targetHeight: height.toInt(),
+      targetWidth: width.toInt(),
+      renderImageType: imageType,
+    );
+
+    if (!mounted || requestId != _highRequestId) {
+      return;
+    }
+
+    // --------------------------------
+    // HIGH = memory only
+    // --------------------------------
+
+    final bytes = image.unwrap();
+
+    _highQualityImage = bytes;
+
+    setState(() {});
+  }
+
+  // ============================================================
+  // Dispose
+  // ============================================================
 
   @override
   void dispose() {
-    _qualityTimer?.cancel();
-    _subscription?.cancel();
+    _lowQualityTimer?.cancel();
+    _highQualityTimer?.cancel();
 
-    // Pending request တွေကို invalidate
-    _requestId++;
+    _lowRequestId++;
+    _highRequestId++;
+
+    // HIGH က ReaderItem lifetime ပဲ။
+    _highQualityImage = null;
+
+    _subscription?.cancel();
+    _visiblePageSub?.cancel();
 
     super.dispose();
   }
 
+  // ============================================================
+  // Build
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
+    final footerBuilder = widget.controller.widgetBuilder.footerBuilder;
+
     return Column(
       children: [
         Expanded(child: _buildImage()),
 
-        // Footer ရှိရင် ဒီမှာ
-        // _buildFooter(),
+        if (footerBuilder != null) footerBuilder(context, widget.offset),
       ],
     );
   }
 
+  // ============================================================
+  // Image
+  // ============================================================
+
   Widget _buildImage() {
-    final image = _image;
+    final image = _highQualityImage ?? _lowQualityImage;
 
     if (image == null) {
       return const Center(child: CircularProgressIndicator());
@@ -222,11 +429,7 @@ class _ReaderItemState extends State<ReaderItem> {
       child: Image.memory(
         image,
         fit: BoxFit.contain,
-
-        // Image အသစ် decode မပြီးခင်
-        // အရင် image ကို ဆက်ပြထားနိုင်အောင်
         gaplessPlayback: true,
-
         filterQuality: FilterQuality.high,
       ),
     );

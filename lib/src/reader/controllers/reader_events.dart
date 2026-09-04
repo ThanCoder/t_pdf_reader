@@ -22,6 +22,7 @@ class UpdateViewortHeight extends ReaderEvent {}
 
 class UpdateViewortWidth extends ReaderEvent {}
 
+class UpdateVisibleCachedPages extends ReaderEvent {}
 class UpdateVisiblePages extends ReaderEvent {}
 
 class UpdateOffset extends ReaderEvent {}

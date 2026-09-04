@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:collection/collection.dart';
+
 import 'package:t_pdf_reader/src/reader/controllers/types/page_offset.dart';
 import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 import 'package:than_pdf_engine/core/models/page_size.dart';
@@ -27,7 +29,7 @@ class ReaderStateController extends IReaderStateController
         ActionsHandler {
   @override
   int? getCurrentPage() {
-    final pages = visiblePages;
+    final pages = visibleCachedPages;
     if (pages.isEmpty) return null;
 
     final center = state.currentOffset + state.recentViewportHeight / 2;
@@ -51,9 +53,6 @@ class ReaderStateController extends IReaderStateController
   @override
   void scrollBy(double dy) {
     final maxOffset = max(0.0, contentHeight - state.recentViewportHeight);
-    // print(
-    //   'recentViewportHeight: $recentViewportHeight - currentOffset: $currentOffset - maxOffset: $maxOffset',
-    // );
     if (maxOffset <= 0) return;
     state.currentOffset = (state.currentOffset + dy).clamp(0.0, maxOffset);
 
@@ -62,12 +61,24 @@ class ReaderStateController extends IReaderStateController
 
   @override
   void updateVisiablePages() {
-    visiblePages = PageOffsetUtils.calculateVisiblePages(
+    final (
+      visibleCachedPages,
+      visiablePages,
+    ) = PageOffsetUtils.calculateVisibleCachePages(
       pages: pageOffsets,
       scrollOffset: state.currentOffset,
       viewportHeight: state.recentViewportHeight,
       preloadPageCount: state.preloadPageCount,
     );
+
+    if (!ListEquality<PageOffset>().equals(
+      this.visibleCachedPages,
+      visibleCachedPages,
+    )) {
+      this.visibleCachedPages = visibleCachedPages;
+      state.visiableCachedPagesCount = visibleCachedPages.length;
+    }
+
     // current page event
     final currentPage = getCurrentPage();
     if (currentPage != null && state.page != currentPage) {
@@ -85,7 +96,13 @@ class ReaderStateController extends IReaderStateController
         _con.add(ScrollbarUiChanged());
       }
     }
-    state.visiablePagesCount = visiblePages.length;
-    _con.add(UpdateVisiblePages());
+
+    _con.add(UpdateVisibleCachedPages());
+
+    // visiable page index
+    if (!const ListEquality<int>().equals(state.visiablePages, visiablePages)) {
+      state.visiablePages = visiablePages;
+      _con.add(UpdateVisiblePages());
+    }
   }
 }

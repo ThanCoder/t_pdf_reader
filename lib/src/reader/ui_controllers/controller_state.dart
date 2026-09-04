@@ -82,5 +82,5 @@ class ControllerState extends IControllerState {
   PageRenderImageType get renderImageType => _reader.state.renderImageType;
 
   @override
-  int get visiablePagesCount => _reader.state.visiablePagesCount;
+  int get visiableCachedPagesCount => _reader.state.visiableCachedPagesCount;
 }

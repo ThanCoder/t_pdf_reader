@@ -51,7 +51,7 @@ class ControllerStreamEmpty extends IControllerStream {
   Stream<UpdateViewortWidth> get updateViewortWidth => .empty();
 
   @override
-  Stream<UpdateVisiblePages> get updateVisiblePages => .empty();
+  Stream<UpdateVisibleCachedPages> get updateVisiblePages => .empty();
 
   @override
   Stream<ZoomChanged> get zoomChanged => .empty();

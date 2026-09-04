@@ -10,7 +10,7 @@ mixin ReaderPdfListLogic {
 
   Widget buildPdfListWidget(BoxConstraints constraints) {
     return StreamBuilder(
-      stream: stateController.stream.whereType<UpdateVisiblePages>(),
+      stream: stateController.stream.whereType<UpdateVisibleCachedPages>(),
       builder: (context, asyncSnapshot) {
         // print(
         //   'visible: ${stateController.visiblePages.map((e) => e.pageIndex).toList()}',
@@ -20,7 +20,7 @@ mixin ReaderPdfListLogic {
         // print('Cache Size: ${stateController.imageCache.size.toFileSizeLabel()}');
         // print('offset page: ${stateController.visiblePages.first}');
         final list = <Widget>[];
-        for (var p in stateController.visiblePages) {
+        for (var p in stateController.visibleCachedPages) {
           final top = p.top - stateController.state.currentOffset;
           final defaultCenterLeft = (constraints.maxWidth - p.width) / 2;
           final left = defaultCenterLeft + stateController.state.currentOffsetX;

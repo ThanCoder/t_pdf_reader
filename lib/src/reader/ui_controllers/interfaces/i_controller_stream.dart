@@ -7,7 +7,7 @@ abstract class IControllerStream {
   Stream<UpdateViewort> get updateViewort;
   Stream<UpdateViewortHeight> get updateViewortHeight;
   Stream<UpdateViewortWidth> get updateViewortWidth;
-  Stream<UpdateVisiblePages> get updateVisiblePages;
+  Stream<UpdateVisibleCachedPages> get updateVisiblePages;
   Stream<UpdateOffset> get updateOffset;
   Stream<ReaderLoaded> get loaded;
   Stream<ReaderUILoaded> get uiLoaded;

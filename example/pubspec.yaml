@@ -5,7 +5,7 @@ description: "Demonstrates how to use the t_pdf_reader plugin."
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 environment:
-  sdk: ^3.12.0
+  sdk: ^3.13.0
 dependencies:
   flutter:
     sdk: flutter
@@ -21,7 +21,6 @@ dependencies:
   desktop_drop: ^0.7.1
   dart_core_extensions: ^0.5.0
   than_pdf_engine: ^1.2.0
-  
 
   material_ui: any
 dev_dependencies:
@@ -32,8 +31,6 @@ dev_dependencies:
 
   flutter_lints: ^6.0.0
 
-
-
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -43,5 +40,3 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
-
-

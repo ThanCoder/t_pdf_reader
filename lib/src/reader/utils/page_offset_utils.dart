@@ -35,7 +35,8 @@ class PageOffsetUtils {
     return result;
   }
 
-  static List<PageOffset> calculateVisiblePages({
+  /// cache pages + real visible page indexes
+  static (List<PageOffset>, List<int>) calculateVisibleCachePages({
     required List<PageOffset> pages,
     required double scrollOffset,
     required double viewportHeight,
@@ -47,51 +48,52 @@ class PageOffsetUtils {
 
     var lastVisible = firstVisible;
 
+    // -----------------------------
+    // Find REAL visible pages
+    // -----------------------------
+
     for (var i = firstVisible; i < pages.length; i++) {
       final page = pages[i];
 
+      // Page က viewport အောက်ကို ရောက်သွားပြီ
       if (page.top >= viewportBottom) {
         break;
       }
 
-      lastVisible = i;
+      // Page က viewport နဲ့ overlap ဖြစ်နေတယ်
+      if (page.bottom > scrollOffset) {
+        lastVisible = i;
+      }
     }
 
-    // Keep visiblePageCount pages above and below viewport.
+    // -----------------------------
+    // Real visible page indexes
+    // -----------------------------
+
+    final realVisible = <int>[];
+
+    for (var i = firstVisible; i <= lastVisible; i++) {
+      final page = pages[i];
+
+      final isVisible = page.bottom > scrollOffset && page.top < viewportBottom;
+
+      if (isVisible) {
+        realVisible.add(i);
+      }
+    }
+
+    // -----------------------------
+    // Cache / preload range
+    // -----------------------------
+
     final start = max(0, firstVisible - preloadPageCount);
+
     final end = min(pages.length, lastVisible + preloadPageCount + 1);
 
-    return pages.sublist(start, end);
+    final cachePages = pages.sublist(start, end);
+
+    return (cachePages, realVisible);
   }
-
-  // static List<PageOffset> calculateVisiblePages({
-  //   required List<PageOffset> pages,
-  //   required double scrollOffset,
-  //   required double viewportHeight,
-  // }) {
-  //   final viewportBottom = scrollOffset + viewportHeight;
-
-  //   final firstVisible = findFirstVisiblePage(pages, scrollOffset);
-
-  //   // Find last visible page.
-  //   var lastVisible = firstVisible;
-
-  //   for (var i = firstVisible; i < pages.length; i++) {
-  //     final page = pages[i];
-
-  //     if (page.top >= viewportBottom) {
-  //       break;
-  //     }
-
-  //     lastVisible = i;
-  //   }
-
-  //   // Keep 2 pages above and 2 pages below viewport.
-  //   final start = max(0, firstVisible - 2);
-  //   final end = min(pages.length, lastVisible + 3);
-
-  //   return pages.sublist(start, end);
-  // }
 
   /// binary search
   static int findFirstVisiblePage(List<PageOffset> pages, double viewportTop) {

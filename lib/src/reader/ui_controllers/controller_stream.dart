@@ -65,8 +65,8 @@ class ControllerStream extends IControllerStream {
       _stream.whereType<UpdateViewortWidth>();
 
   @override
-  Stream<UpdateVisiblePages> get updateVisiblePages =>
-      _stream.whereType<UpdateVisiblePages>();
+  Stream<UpdateVisibleCachedPages> get updateVisiblePages =>
+      _stream.whereType<UpdateVisibleCachedPages>();
 
   @override
   Stream<ZoomChanged> get zoomChanged => _stream.whereType<ZoomChanged>();

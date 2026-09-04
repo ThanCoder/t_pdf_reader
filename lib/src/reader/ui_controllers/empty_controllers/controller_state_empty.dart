@@ -73,5 +73,5 @@ class ControllerStateEmpty extends IControllerState {
   PageRenderImageType get renderImageType => .jpg;
 
   @override
-  int get visiablePagesCount => 0;
+  int get visiableCachedPagesCount => 0;
 }

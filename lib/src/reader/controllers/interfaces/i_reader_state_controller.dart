@@ -1,7 +1,7 @@
 part of '../reader_state_controller.dart';
 
 sealed class IReaderStateController {
-  List<PageOffset> visiblePages = [];
+  List<PageOffset> visibleCachedPages = [];
   List<PageSize> pages = [];
   List<PageOffset> pageOffsets = [];
   ReaderState state = .new();

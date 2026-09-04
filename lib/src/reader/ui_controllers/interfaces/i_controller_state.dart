@@ -3,7 +3,7 @@ import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
 import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 
 abstract class IControllerState {
-  int get visiablePagesCount;
+  int get visiableCachedPagesCount;
   int get preloadPageCount;
   int get pageImageHeightQuality;
   int get pageImageLowQuality;

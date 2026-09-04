@@ -9,6 +9,7 @@ environment:
   flutter: ">=3.4.0"
 
 dependencies:
+  collection: ^1.19.1
   flutter:
     sdk: flutter
   pdfium_dart: ^0.2.5
