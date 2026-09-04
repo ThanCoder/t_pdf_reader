@@ -1,3 +1,8 @@
+# 1.3.0
+
++ Refactored the PDF reader item rendering architecture.
++ Improved page image caching and rendering performance.
+
 # 1.2.0
 
 + Changed `Pdf Reader Item Core.`
