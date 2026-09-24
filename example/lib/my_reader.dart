@@ -18,6 +18,7 @@ class _MyReaderState extends State<MyReader> {
   @override
   void initState() {
     controller = TPdfController(
+      pageImageWorkerType: .multiThread,
       widgetBuilder: TPdfWidgetBuilder(
         // placeholderBuilder: (context) => Placeholder(),
         footerBuilder: (context, pageOffset) => Container(
@@ -30,12 +31,6 @@ class _MyReaderState extends State<MyReader> {
             ),
           ),
         ),
-        // scrollbarBuilder: (context, page) {
-        //   return .new(
-        //     widgetInfo: .new(thumbWidth: 20, thumbHeight: 40),
-        //     builder: defaultScrollbarGlow(thumbWidth: 20, thumbHeight: 40),
-        //   );
-        // },
       ),
       eventBuilder: .new(
         onKeyEventAfterConfig: (node, event) {
@@ -145,6 +140,7 @@ class _MyReaderState extends State<MyReader> {
                 PdfRenderImageTypeView(controller: controller),
                 PdfPreloadPageView(controller: controller),
                 PdfVisiableCachedPageView(controller: controller),
+                PdfThreadLabelView(controller: controller)
               ],
             ),
           ),

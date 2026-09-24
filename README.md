@@ -19,11 +19,16 @@ A customizable PDF reader widget for Flutter, designed for smooth document viewi
 * 🔄 Reactive controller streams
 * ⚡ Programmatic reader actions
 * 🧩 Extensible reader UI
+* 🧵 Single-thread and multi-thread page image processing
+* ⚡ Independent low- and high-quality image processing
+
+
 
 ---
 
 ## Short
 * [Basic Usage](#basic-usage)
+* [Single-thread and multi-thread](#page-image-worker-types)
 * [Built In Scrollbar Styles](#built-in-scrollbar-styles)
 * [Controller](#controller)
 * [Custom Footer](#custom-footer)
@@ -89,6 +94,35 @@ class _MyReaderState extends State<MyReader> {
     );
   }
 }
+```
+
+---
+### Page Image Worker Types
+
+`t_pdf_reader` supports two page image worker modes:
+
+#### `IPageImageWorkerType.singleThread`
+
+The default mode. A single isolate handles both low-quality and high-quality page image processing. Low- and high-quality image data are fetched sequentially within the same worker.
+
+#### `IPageImageWorkerType.multiThread`
+
+The multi-thread mode uses separate isolates for low-quality and high-quality page image processing.
+
+This allows low-quality and high-quality image processing to run independently. While the low-quality image is being fetched or processed, the high-quality image does not have to wait for the low-quality operation to complete.
+
+This can improve responsiveness when loading page images, especially when both low- and high-quality images are requested at the same time.
+
+### Example
+```dart
+late final TPdfController controller;
+
+  @override
+  void initState() {
+    controller = TPdfController(
+      pageImageWorkerType: .multiThread,
+    )
+  }
 ```
 
 ---

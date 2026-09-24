@@ -5,11 +5,13 @@ class TPdfController extends ITPdfController {
   TPdfController({
     TPdfWidgetBuilder? widgetBuilder,
     TPdfEventBuilder? eventBuilder,
+    this.pageImageWorkerType = .singleThread,
   }) : widgetBuilder = widgetBuilder ?? const TPdfWidgetBuilder(),
        eventBuilder = eventBuilder ?? const TPdfEventBuilder();
 
   final TPdfWidgetBuilder widgetBuilder;
   final TPdfEventBuilder eventBuilder;
+  final IPageImageWorkerType pageImageWorkerType;
 }
 
 class TPdfEventBuilder {
@@ -26,6 +28,24 @@ class TPdfEventBuilder {
 class TPdfWidgetBuilder {
   final Widget Function(BuildContext context, PageOffset pageOffset)?
   footerBuilder;
+
+  /// ### default Widgets
+  ///
+  /// `defaultScrollbar1`,`defaultScrollbarMinimal`,`defaultScrollbarNeon`,`defaultScrollbarCyber`,
+  /// `defaultScrollbarAurora`,`defaultScrollbarGlass`,
+  /// `defaultScrollbarCyberDots`,`defaultScrollbarGlow`,
+  ///
+  /// ### Example
+  /// ```
+  /// scrollbarBuilder: (context, page) {
+  ///   return defaultScrollbar1; // default
+  ///   //custom
+  ///   return .new(
+  ///     widgetInfo: .new(thumbWidth: 20, thumbHeight: 40),
+  ///     builder: defaultScrollbarGlow(thumbWidth: 20, thumbHeight: 40),
+  ///   );
+  /// },
+  /// ```
   final ScrollbarWidgetBuilder Function(BuildContext context, int page)?
   scrollbarBuilder;
   final Widget Function(BuildContext context, bool isLoading, double? progress)?

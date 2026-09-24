@@ -1,3 +1,12 @@
+# 1.4.0
+
+### Added
+
+* Added configurable page image worker modes with single-thread and multi-thread support.
+* Added independent low- and high-quality page image processing.
+* Added `IPageImageWorkerType` with `singleThread` as the default mode.
+
+
 # 1.3.0
 
 + Refactored the PDF reader item rendering architecture.

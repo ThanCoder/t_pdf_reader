@@ -6,7 +6,7 @@ mixin ReaderPdfListLogic {
   _TPdfReaderState get state;
   ReaderStateController get stateController;
   TPdfController get controller;
-  PdfReaderWorker get worker;
+  IPageImageWorker get worker;
 
   Widget buildPdfListWidget(BoxConstraints constraints) {
     return StreamBuilder(

@@ -7,10 +7,10 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:t_pdf_reader/src/reader/controllers/types/page_offset.dart';
 import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
+import 'package:t_pdf_reader/src/reader/page_image_worker/i_page_image_worker.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/controller_stream.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/empty_controllers/controller_stream_empty.dart';
 import 'package:t_pdf_reader/src/reader/ui_controllers/interfaces/i_controller_stream.dart';
-import 'package:than_pdf_engine/core/high_level_api/reader/pdf_reader_worker.dart';
 
 import 'package:t_pdf_reader/src/reader/controllers/reader_state_controller.dart';
 import 'package:t_pdf_reader/src/reader/ui/reader_item.dart';
@@ -61,7 +61,7 @@ class _TPdfReaderState extends State<TPdfReader>
   _TPdfReaderState get state => this;
 
   @override
-  final worker = PdfReaderWorker();
+  late final worker = widget.controller.pageImageWorkerType.createThread();
 
   @override
   TPdfController get controller => widget.controller;

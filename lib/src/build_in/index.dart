@@ -8,3 +8,4 @@ export 'pdf_scrollbar_toggler.dart';
 export 'pdf_preload_page_view.dart';
 export 'pdf_visiable_cached_page_view.dart';
 export 'pdf_render_image_type_view.dart';
+export 'pdf_thread_label_view.dart';

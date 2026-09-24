@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:than_pdf_engine/core/high_level_api/reader/pdf_reader_worker.dart';
+import 'package:t_pdf_reader/src/reader/page_image_worker/i_page_image_worker.dart';
 import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 import 'package:t_pdf_reader/src/reader/controllers/reader_state_controller.dart';
 import 'package:t_pdf_reader/src/reader/controllers/types/page_offset.dart';
@@ -12,7 +12,7 @@ import 'package:t_pdf_reader/src/reader/utils/page_image_cache.dart';
 class ReaderItem extends StatefulWidget {
   final PageOffset offset;
   final ReaderStateController stateController;
-  final PdfReaderWorker worker;
+  final IPageImageWorker worker;
   final PageImageCache imageCache;
   final TPdfController controller;
 
@@ -265,7 +265,7 @@ class _ReaderItemState extends State<ReaderItem> {
     // Render LOW
     // --------------------------------
 
-    final image = await widget.worker.getImage(
+    final image = await widget.worker.getImageLowQuality(
       pageIndex,
       quality: quality,
       targetHeight: height.toInt(),
@@ -353,7 +353,7 @@ class _ReaderItemState extends State<ReaderItem> {
     // Render HIGH
     // --------------------------------
 
-    final image = await widget.worker.getImage(
+    final image = await widget.worker.getImageHighQuality(
       pageIndex,
       quality: quality,
       targetHeight: height.toInt(),

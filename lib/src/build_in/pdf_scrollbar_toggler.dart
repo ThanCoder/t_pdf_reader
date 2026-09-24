@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/t_pdf_reader.dart';
 
 class PdfScrollbarToggler extends StatelessWidget {
-  const PdfScrollbarToggler({super.key, required this.controller});
+  const PdfScrollbarToggler({
+    super.key,
+    required this.controller,
+    this.onClicked,
+  });
   final TPdfController controller;
+  final void Function()? onClicked;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +32,7 @@ class PdfScrollbarToggler extends StatelessWidget {
             controller.action.scrollbarEnable(
               !controller.state.scrollbarEnable,
             );
+            onClicked?.call();
           },
         );
       },
