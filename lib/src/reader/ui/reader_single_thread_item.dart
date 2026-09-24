@@ -1,22 +1,16 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:t_pdf_reader/src/reader/page_image_worker/i_page_image_worker.dart';
-import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 import 'package:t_pdf_reader/src/reader/controllers/reader_state_controller.dart';
 import 'package:t_pdf_reader/src/reader/controllers/types/page_offset.dart';
 import 'package:t_pdf_reader/src/reader/t_pdf_reader.dart';
-import 'package:t_pdf_reader/src/reader/utils/page_image_cache.dart';
+import 'package:t_pdf_reader/src/reader/cache/page_image_cache.dart';
 
-class ReaderItem extends StatefulWidget {
-  final PageOffset offset;
-  final ReaderStateController stateController;
-  final IPageImageWorker worker;
-  final PageImageCache imageCache;
-  final TPdfController controller;
-
-  const ReaderItem({
+class ReaderSingleThreadItem extends StatefulWidget {
+  const new({
     super.key,
     required this.offset,
     required this.stateController,
@@ -24,12 +18,17 @@ class ReaderItem extends StatefulWidget {
     required this.imageCache,
     required this.controller,
   });
+  final PageOffset offset;
+  final ReaderStateController stateController;
+  final IPageImageWorker worker;
+  final PageImageCache imageCache;
+  final TPdfController controller;
 
   @override
-  State<ReaderItem> createState() => _ReaderItemState();
+  State<ReaderSingleThreadItem> createState() => _ReaderSingleThreadItemState();
 }
 
-class _ReaderItemState extends State<ReaderItem> {
+class _ReaderSingleThreadItemState extends State<ReaderSingleThreadItem> {
   Uint8List? _lowQualityImage;
   Uint8List? _highQualityImage;
 
@@ -52,7 +51,7 @@ class _ReaderItemState extends State<ReaderItem> {
 
   /// LOW ပြီးသွားပြီး
   /// HIGH မစခင် စောင့်မယ့်အချိန်။
-  static const _highQualityDelay = Duration(milliseconds: 200);
+  static const _highQualityDelay = Duration(milliseconds: 100);
 
   @override
   void initState() {
@@ -64,9 +63,7 @@ class _ReaderItemState extends State<ReaderItem> {
 
     _visiblePageSub = widget.stateController.stream
         .whereType<UpdateVisiblePages>()
-        .listen((_) {
-          _checkVisible();
-        });
+        .listen((_) => _checkVisible());
 
     // --------------------------------
     // State events
@@ -86,9 +83,7 @@ class _ReaderItemState extends State<ReaderItem> {
   // ============================================================
 
   void _checkVisible() {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     final visiblePages = widget.stateController.state.visiablePages;
 
@@ -146,9 +141,7 @@ class _ReaderItemState extends State<ReaderItem> {
   // ============================================================
 
   void _scheduleLowQuality() {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     // User က ဆက် zoom / scale / jump လုပ်နေသရွေ့
     // timer ကို reset လုပ်မယ်။
@@ -168,23 +161,13 @@ class _ReaderItemState extends State<ReaderItem> {
   // ============================================================
 
   void _scheduleHighQuality() {
-    if (!mounted) {
-      return;
-    }
-
-    if (_lowQualityImage == null) {
-      return;
-    }
-
-    if (_highQualityImage != null) {
-      return;
-    }
+    if (!mounted) return;
+    if (_lowQualityImage == null) return;
+    if (_highQualityImage != null) return;
 
     final visiblePages = widget.stateController.state.visiablePages;
 
-    if (!visiblePages.contains(widget.offset.pageIndex)) {
-      return;
-    }
+    if (!visiblePages.contains(widget.offset.pageIndex)) return;
 
     _highQualityTimer?.cancel();
 
@@ -196,9 +179,7 @@ class _ReaderItemState extends State<ReaderItem> {
   // ============================================================
 
   Future<void> _loadLowQuality() async {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     final state = widget.stateController.state;
 
@@ -207,7 +188,7 @@ class _ReaderItemState extends State<ReaderItem> {
     final width = widget.offset.width;
     final height = widget.offset.height;
 
-    const imageType = PageRenderImageType.jpg;
+    final imageType = widget.stateController.state.renderImageType;
 
     // --------------------------------
     // Same size
@@ -233,8 +214,6 @@ class _ReaderItemState extends State<ReaderItem> {
       pageIndex,
       width: width,
       height: height,
-      quality: quality,
-      imageType: imageType,
     );
 
     if (cached != null) {
@@ -289,7 +268,6 @@ class _ReaderItemState extends State<ReaderItem> {
       width: width,
       height: height,
       quality: quality,
-      imageType: imageType,
     );
 
     _lastWidth = width;
@@ -315,19 +293,13 @@ class _ReaderItemState extends State<ReaderItem> {
   // ============================================================
 
   Future<void> _loadHighQuality() async {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     // LOW မပြီးသေးရင် မလုပ်ပါနဲ့။
-    if (_lowQualityImage == null) {
-      return;
-    }
+    if (_lowQualityImage == null) return;
 
     // HIGH ရှိပြီးသား
-    if (_highQualityImage != null) {
-      return;
-    }
+    if (_highQualityImage != null) return;
 
     // လက်ရှိ page က REAL visible ဖြစ်သေးလား
     final visiblePages = widget.stateController.state.visiablePages;
@@ -388,7 +360,7 @@ class _ReaderItemState extends State<ReaderItem> {
     _lowRequestId++;
     _highRequestId++;
 
-    // HIGH က ReaderItem lifetime ပဲ။
+    // HIGH က ReaderSingleThreadItem lifetime ပဲ။
     _highQualityImage = null;
 
     _subscription?.cancel();
@@ -403,6 +375,11 @@ class _ReaderItemState extends State<ReaderItem> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.stateController.state.scrollbarDragging) {
+      final iconSize = min(widget.offset.width, widget.offset.height) * 0.4;
+      return Icon(Icons.image_not_supported_outlined, size: iconSize);
+    }
+
     final footerBuilder = widget.controller.widgetBuilder.footerBuilder;
 
     return Column(

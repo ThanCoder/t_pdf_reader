@@ -1,6 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:t_pdf_reader/src/reader/controllers/reader_state_controller.dart';
-import 'package:t_pdf_reader/src/reader/utils/page_image_cache.dart';
+import 'package:t_pdf_reader/src/reader/cache/page_image_cache.dart';
 
 abstract class IControllerStream {
   Stream<ReaderEvent> get all;

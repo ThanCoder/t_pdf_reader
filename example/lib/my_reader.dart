@@ -20,7 +20,7 @@ class _MyReaderState extends State<MyReader> {
     controller = TPdfController(
       pageImageWorkerType: .multiThread,
       widgetBuilder: TPdfWidgetBuilder(
-        // placeholderBuilder: (context) => Placeholder(),
+        placeholderBuilder: (context) => Placeholder(),
         footerBuilder: (context, pageOffset) => Container(
           width: pageOffset.width,
           color: Colors.white,
@@ -46,7 +46,7 @@ class _MyReaderState extends State<MyReader> {
     );
     controller.attached.listen((_) {
       controller.stream.ready.listen((event) {
-        controller.action.jumpPage(4);
+        // controller.action.jumpPage(4);
         controller.action.setFitZoom();
         print('reader ready');
         // controller.action.setZoom(1.7000000000000006);
@@ -140,7 +140,7 @@ class _MyReaderState extends State<MyReader> {
                 PdfRenderImageTypeView(controller: controller),
                 PdfPreloadPageView(controller: controller),
                 PdfVisiableCachedPageView(controller: controller),
-                PdfThreadLabelView(controller: controller)
+                PdfThreadLabelView(controller: controller),
               ],
             ),
           ),

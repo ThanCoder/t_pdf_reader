@@ -21,13 +21,20 @@ enum IPageImageWorkerType {
 
   IPageImageWorker createThread() {
     if (this == multiThread) {
-      return PageImageWorkerMultiThread();
+      return PageImageWorkerMultiThread(.multiThread);
     }
-    return PageImageWorkerSingleThread();
+    return PageImageWorkerSingleThread(.singleThread);
+  }
+
+  static IPageImageWorkerType fromValue(String val) {
+    return values.firstWhere((e) => e.name == val, orElse: () => .singleThread);
   }
 }
 
 sealed class IPageImageWorker {
+  final IPageImageWorkerType type;
+  const IPageImageWorker(this.type);
+
   Future<Result<bool, PdfReaderWorkerOpenErrorResult>> open(String path);
   Future<void> close();
 

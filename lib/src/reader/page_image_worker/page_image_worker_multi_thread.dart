@@ -5,6 +5,8 @@ class PageImageWorkerMultiThread extends IPageImageWorker {
   // for hight quality
   final _worker2 = PdfReaderWorker();
 
+  new(super.type);
+
   @override
   Future<Result<bool, PdfReaderWorkerOpenErrorResult>> open(String path) async {
     final res = await _worker.open(path);
@@ -23,6 +25,7 @@ class PageImageWorkerMultiThread extends IPageImageWorker {
     int quality = 100,
     PageRenderImageType renderImageType = .jpg,
   }) async {
+    // print('getImageHighQuality: $pageIndex');
     return await _worker2.getImage(
       pageIndex,
       quality: quality,
@@ -40,6 +43,8 @@ class PageImageWorkerMultiThread extends IPageImageWorker {
     int quality = 20,
     PageRenderImageType renderImageType = .jpg,
   }) async {
+    // print('getImageLowQuality: $pageIndex');
+
     return await _worker.getImage(
       pageIndex,
       quality: quality,

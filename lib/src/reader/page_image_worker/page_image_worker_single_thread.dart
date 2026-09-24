@@ -2,6 +2,7 @@ part of 'i_page_image_worker.dart';
 
 class PageImageWorkerSingleThread extends IPageImageWorker {
   final _worker = PdfReaderWorker();
+  new(super.type);
 
   @override
   Future<Result<bool, PdfReaderWorkerOpenErrorResult>> open(String path) async {

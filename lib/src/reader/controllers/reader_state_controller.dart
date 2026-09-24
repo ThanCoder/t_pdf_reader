@@ -8,7 +8,7 @@ import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 import 'package:than_pdf_engine/core/models/page_size.dart';
 import 'package:t_pdf_reader/src/reader/controllers/reader_state.dart';
 import 'package:t_pdf_reader/src/reader/controllers/types/scrollbar_info.dart';
-import 'package:t_pdf_reader/src/reader/utils/page_image_cache.dart';
+import 'package:t_pdf_reader/src/reader/cache/page_image_cache.dart';
 import 'package:t_pdf_reader/src/reader/utils/page_offset_utils.dart';
 
 part 'reader_events.dart';
