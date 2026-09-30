@@ -18,6 +18,7 @@ class ReaderMultiThreadItem extends StatefulWidget {
     required this.imageCache,
     required this.controller,
   });
+
   final PageOffset offset;
   final ReaderStateController stateController;
   final IPageImageWorker worker;
@@ -29,48 +30,116 @@ class ReaderMultiThreadItem extends StatefulWidget {
 }
 
 class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
+  // ============================================================
+  // Images
+  // ============================================================
+
   Uint8List? _lowQualityImage;
+
   Uint8List? _highQualityImage;
+
+  /// Previous HIGH image.
+  ///
+  /// This is only used while a new HIGH image is rendering.
   Uint8List? _lastHighQualityImage;
+
+  // ============================================================
+  // LOW image size
+  // ============================================================
 
   double? _lastWidth;
   double? _lastHeight;
 
-  StreamSubscription? _subscription;
-  StreamSubscription? _visiblePageSub;
+  // ============================================================
+  // State subscriptions
+  // ============================================================
 
-  final loadHighImageDelay = Duration(milliseconds: 300);
+  StreamSubscription? _stateSubscription;
+  StreamSubscription? _visiblePageSubscription;
+
+  // ============================================================
+  // HIGH delay
+  // ============================================================
+
+  Timer? _loadHighImageDelayTimer;
+
+  static const _loadHighImageDelay = Duration(milliseconds: 300);
+
+  // ============================================================
+  // Request generation
+  // ============================================================
+
+  /// HIGH request generation.
+  ///
+  /// Every new HIGH request increments this value.
+  ///
+  /// This prevents an old async HIGH result from replacing
+  /// a newer HIGH result.
+  int _highRequestGeneration = 0;
+
+  /// LOW request generation.
+  ///
+  /// Prevents an old LOW request from replacing a newer LOW
+  /// request after zoom/size changes.
+  int _lowRequestGeneration = 0;
+
+  // ============================================================
+  // Lifecycle
+  // ============================================================
 
   @override
   void initState() {
     super.initState();
-    _visiblePageSub = widget.stateController.stream
-        .whereType<UpdateVisiblePages>()
-        .listen((_) => _checkVisible());
 
-    // --------------------------------
+    // ----------------------------------------------------------
+    // Visible pages
+    // ----------------------------------------------------------
+
+    _visiblePageSubscription = widget.stateController.stream
+        .where((event) => event is UpdateVisiblePages)
+        .listen((_) {
+          _checkVisible();
+        });
+
+    // ----------------------------------------------------------
     // State events
-    // --------------------------------
+    // ----------------------------------------------------------
 
-    _subscription = widget.stateController.stream.listen(_onStateEvent);
+    _stateSubscription = widget.stateController.stream.listen(_onStateEvent);
 
-    // --------------------------------
-    // Initial LOW
-    // --------------------------------
+    // ----------------------------------------------------------
+    // Start LOW and HIGH independently.
+    //
+    // IMPORTANT:
+    // HIGH does NOT wait for LOW.
+    // ----------------------------------------------------------
 
     _loadLowQuality();
+
+    _checkVisible();
   }
 
   @override
   void dispose() {
-    // HIGH က ReaderSingleThreadItem lifetime ပဲ။
-    _highQualityImage = null;
+    // Invalidate all running requests.
+    _lowRequestGeneration++;
+    _highRequestGeneration++;
 
-    _subscription?.cancel();
-    _visiblePageSub?.cancel();
+    _loadHighImageDelayTimer?.cancel();
+
+    _stateSubscription?.cancel();
+    _visiblePageSubscription?.cancel();
+
+    _lowQualityImage = null;
+    _highQualityImage = null;
+    _lastHighQualityImage = null;
 
     super.dispose();
   }
+
+  // ============================================================
+  // Visible
+  // ============================================================
 
   void _checkVisible() {
     if (!mounted) return;
@@ -80,50 +149,96 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
     final pageIndex = widget.offset.pageIndex;
 
     if (!visiblePages.contains(pageIndex)) {
-      // Visible မဟုတ်တော့ရင် pending HIGH ကို cancel
-      // လုပ်ထားတာက ပိုကောင်းတယ်။
-      // _highQualityTimer?.cancel();
-      _loadHighQualityDelayTimer?.cancel();
+      // --------------------------------------------------------
+      // Not visible.
+      // --------------------------------------------------------
+
+      _loadHighImageDelayTimer?.cancel();
+
+      // Invalidate HIGH request.
+      _highRequestGeneration++;
+
       return;
     }
 
-    // LOW ရပြီးမှ HIGH schedule လုပ်မယ်။
-    if (_lowQualityImage != null) {
-      // _scheduleHighQuality();
-    }
+    // ----------------------------------------------------------
+    // Visible.
+    //
+    // HIGH is delayed slightly to avoid rendering every page
+    // immediately while scrolling.
+    // ----------------------------------------------------------
+
     _loadHighQualityDelay();
   }
 
+  // ============================================================
+  // State events
+  // ============================================================
+
   void _onStateEvent(Object event) {
-    // --------------------------------
+    // ----------------------------------------------------------
     // Zoom / Mobile Scale
-    // --------------------------------
+    // ----------------------------------------------------------
 
     if (event is ZoomChanged || event is MobileScaleChanged) {
+      _loadHighImageDelayTimer?.cancel();
+
+      // --------------------------------------------------------
+      // Keep previous HIGH while new HIGH is rendering.
+      // --------------------------------------------------------
+
       _lastHighQualityImage = _highQualityImage;
+
       _highQualityImage = null;
+
+      // --------------------------------------------------------
+      // Invalidate old requests.
+      // --------------------------------------------------------
+
+      _lowRequestGeneration++;
+      _highRequestGeneration++;
+
+      // --------------------------------------------------------
+      // LOW must also be loaded for the new size.
+      // --------------------------------------------------------
+
+      _loadLowQuality();
+
+      // --------------------------------------------------------
+      // HIGH will start after the delay.
+      // --------------------------------------------------------
+
       _loadHighQualityDelay();
+
+      if (mounted) {
+        setState(() {});
+      }
+
       return;
     }
 
-    // --------------------------------
+    // ----------------------------------------------------------
     // User Jump
-    // --------------------------------
+    // ----------------------------------------------------------
 
     if (event is UserJumpChanged) {
       _loadHighQualityDelay();
       return;
     }
 
-    // --------------------------------
+    // ----------------------------------------------------------
     // Scroll End
-    // --------------------------------
+    // ----------------------------------------------------------
 
     if (event is ScrollEnd) {
       _loadHighQualityDelay();
       return;
     }
   }
+
+  // ============================================================
+  // LOW QUALITY
+  // ============================================================
 
   Future<void> _loadLowQuality() async {
     if (!mounted) return;
@@ -134,33 +249,68 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
 
     final width = widget.offset.width;
     final height = widget.offset.height;
-    final pageIndex = widget.offset.pageIndex;
-    final imageType = widget.stateController.state.renderImageType;
 
-    if (width == _lastWidth &&
-        height == _lastHeight &&
+    final pageIndex = widget.offset.pageIndex;
+
+    final imageType = state.renderImageType;
+
+    // ----------------------------------------------------------
+    // Request generation
+    // ----------------------------------------------------------
+
+    final requestGeneration = ++_lowRequestGeneration;
+
+    // ----------------------------------------------------------
+    // Same LOW already loaded.
+    // ----------------------------------------------------------
+
+    if (_lastWidth == width &&
+        _lastHeight == height &&
         _lowQualityImage != null) {
-      //get height image
-      _loadHighQuality();
       return;
     }
+
+    // ----------------------------------------------------------
+    // Check LOW cache.
+    // ----------------------------------------------------------
+
     final cached = widget.imageCache.get(
       pageIndex,
       width: width,
       height: height,
     );
-    if (cached != null) {
-      _lowQualityImage = cached;
-      _lastHeight = width;
-      _lastHeight = height;
-      _highQualityImage = null;
 
-      setState(() {});
-      _loadHighQuality();
+    if (cached != null) {
+      if (!mounted) return;
+
+      if (requestGeneration != _lowRequestGeneration) {
+        return;
+      }
+
+      _lastWidth = width;
+      _lastHeight = height;
+
+      _lowQualityImage = cached;
+
+      // --------------------------------------------------------
+      // IMPORTANT:
+      //
+      // Do NOT clear HIGH here.
+      //
+      // HIGH may already have arrived before LOW.
+      // --------------------------------------------------------
+
+      if (mounted) {
+        setState(() {});
+      }
+
       return;
     }
 
-    // get image
+    // ----------------------------------------------------------
+    // Render LOW
+    // ----------------------------------------------------------
+
     final image = await widget.worker.getImageLowQuality(
       pageIndex,
       targetHeight: height.toInt(),
@@ -169,15 +319,21 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
       renderImageType: imageType,
     );
 
-    if (!mounted) {
+    if (!mounted) return;
+
+    // ----------------------------------------------------------
+    // Old request?
+    // ----------------------------------------------------------
+
+    if (requestGeneration != _lowRequestGeneration) {
       return;
     }
 
     final bytes = image.unwrap();
 
-    // --------------------------------
+    // ----------------------------------------------------------
     // Cache LOW
-    // --------------------------------
+    // ----------------------------------------------------------
 
     widget.imageCache.put(
       pageIndex,
@@ -187,42 +343,89 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
       quality: quality,
     );
 
+    // ----------------------------------------------------------
+    // Save LOW
+    // ----------------------------------------------------------
+
     _lastWidth = width;
     _lastHeight = height;
 
-    setState(() {
-      _lowQualityImage = bytes;
-    });
-    _loadHighQuality();
+    _lowQualityImage = bytes;
+
+    // ----------------------------------------------------------
+    // IMPORTANT:
+    //
+    // Do NOT touch _highQualityImage here.
+    //
+    // HIGH may have already arrived.
+    // ----------------------------------------------------------
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
-  Timer? _loadHighQualityDelayTimer;
+  // ============================================================
+  // HIGH QUALITY DELAY
+  // ============================================================
 
-  Future<void> _loadHighQualityDelay() async {
-    _loadHighQualityDelayTimer?.cancel();
-    _loadHighQualityDelayTimer = Timer(loadHighImageDelay, () {
+  void _loadHighQualityDelay() {
+    _loadHighImageDelayTimer?.cancel();
+
+    _loadHighImageDelayTimer = Timer(_loadHighImageDelay, () {
       if (!mounted) return;
+
       _loadHighQuality();
     });
   }
 
+  // ============================================================
+  // HIGH QUALITY
+  // ============================================================
+
   Future<void> _loadHighQuality() async {
     if (!mounted) return;
 
-    // LOW မပြီးသေးရင် မလုပ်ပါနဲ့။
-    if (_lowQualityImage == null) return;
+    // ----------------------------------------------------------
+    // HIGH does NOT depend on LOW.
+    //
+    // There is intentionally NO:
+    //
+    // if (_lowQualityImage == null) return;
+    //
+    // ----------------------------------------------------------
 
-    // HIGH ရှိပြီးသား
-    if (_highQualityImage != null) return;
+    // ----------------------------------------------------------
+    // Already have HIGH.
+    // ----------------------------------------------------------
 
-    // လက်ရှိ page က REAL visible ဖြစ်သေးလား
-    final visiblePages = widget.stateController.state.visiablePages;
-
-    if (!visiblePages.contains(widget.offset.pageIndex)) {
+    if (_highQualityImage != null) {
       return;
     }
 
+    // ----------------------------------------------------------
+    // Page must be visible.
+    // ----------------------------------------------------------
+
     final state = widget.stateController.state;
+
+    final visiblePages = state.visiablePages;
+
+    final pageIndex = widget.offset.pageIndex;
+
+    if (!visiblePages.contains(pageIndex)) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Request generation
+    // ----------------------------------------------------------
+
+    final requestGeneration = ++_highRequestGeneration;
+
+    // ----------------------------------------------------------
+    // Render parameters
+    // ----------------------------------------------------------
 
     final quality = state.pageImageHeightQuality;
 
@@ -231,11 +434,12 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
 
     final imageType = state.renderImageType;
 
-    final pageIndex = widget.offset.pageIndex;
-
-    // --------------------------------
+    // ----------------------------------------------------------
     // Render HIGH
-    // --------------------------------
+    //
+    // This can run while LOW is still loading.
+    // ----------------------------------------------------------
+
     final image = await widget.worker.getImageHighQuality(
       pageIndex,
       quality: quality,
@@ -244,20 +448,46 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
       renderImageType: imageType,
     );
 
-    if (!mounted) {
+    if (!mounted) return;
+
+    // ----------------------------------------------------------
+    // Old request?
+    // ----------------------------------------------------------
+
+    if (requestGeneration != _highRequestGeneration) {
       return;
     }
 
-    // --------------------------------
-    // HIGH = memory only
-    // --------------------------------
+    // ----------------------------------------------------------
+    // Page no longer visible?
+    // ----------------------------------------------------------
+
+    final currentVisiblePages = widget.stateController.state.visiablePages;
+
+    if (!currentVisiblePages.contains(pageIndex)) {
+      return;
+    }
 
     final bytes = image.unwrap();
 
+    // ----------------------------------------------------------
+    // HIGH arrived first or after LOW.
+    //
+    // HIGH always wins.
+    // ----------------------------------------------------------
+
+    _lastHighQualityImage = null;
+
     _highQualityImage = bytes;
 
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -273,14 +503,37 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
   }
 
   // ============================================================
-  // Image
+  // IMAGE
   // ============================================================
 
   Widget _buildImage() {
+    /*
+    print(
+      'ReaderMultiThreadItem '
+      'page=${widget.offset.pageIndex} '
+      'low=${_lowQualityImage?.length} '
+      'high=${_highQualityImage?.length} '
+      'lastHigh=${_lastHighQualityImage?.length}',
+    );
+    */
+
+    // ----------------------------------------------------------
+    // Priority:
+    //
+    // 1. New HIGH
+    // 2. Previous HIGH
+    // 3. LOW
+    // ----------------------------------------------------------
+
     final image =
-        _lastHighQualityImage ?? (_highQualityImage ?? _lowQualityImage);
+        _highQualityImage ?? _lastHighQualityImage ?? _lowQualityImage;
 
     if (image == null) {
+      final pageImageLoadingBuilder =
+          widget.controller.widgetBuilder.pageImageLoadingBuilder;
+      if (pageImageLoadingBuilder != null) {
+        return Center(child: pageImageLoadingBuilder(context, widget.offset));
+      }
       return const Center(child: CircularProgressIndicator());
     }
 

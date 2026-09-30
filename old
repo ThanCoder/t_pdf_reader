@@ -1,0 +1,494 @@
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+
+import 'package:t_pdf_reader/src/reader/page_image_worker/i_page_image_worker.dart';
+import 'package:t_pdf_reader/src/reader/controllers/reader_state_controller.dart';
+import 'package:t_pdf_reader/src/reader/controllers/types/page_offset.dart';
+import 'package:t_pdf_reader/src/reader/t_pdf_reader.dart';
+import 'package:t_pdf_reader/src/reader/cache/page_image_cache.dart';
+
+class ReaderMultiThreadItem extends StatefulWidget {
+  const new({
+    super.key,
+    required this.offset,
+    required this.stateController,
+    required this.worker,
+    required this.imageCache,
+    required this.controller,
+  });
+
+  final PageOffset offset;
+  final ReaderStateController stateController;
+  final IPageImageWorker worker;
+  final PageImageCache imageCache;
+  final TPdfController controller;
+
+  @override
+  State<ReaderMultiThreadItem> createState() => _ReaderMultiThreadItemState();
+}
+
+class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
+  // ============================================================
+  // Images
+  // ============================================================
+
+  Uint8List? _lowQualityImage;
+
+  Uint8List? _highQualityImage;
+
+  /// Previous HIGH image.
+  ///
+  /// Used while a new HIGH image is rendering.
+  Uint8List? _lastHighQualityImage;
+
+  // ============================================================
+  // LOW image state
+  // ============================================================
+
+  double? _lastWidth;
+  double? _lastHeight;
+
+  // ============================================================
+  // Subscriptions
+  // ============================================================
+
+  StreamSubscription? _stateSubscription;
+  StreamSubscription? _visiblePageSubscription;
+
+  // ============================================================
+  // HIGH image loading
+  // ============================================================
+
+  Timer? _loadHighImageDelayTimer;
+
+  static const _loadHighImageDelay = Duration(milliseconds: 500);
+
+  /// Every HIGH request gets a new generation.
+  ///
+  /// If zoom/scale changes while an old request is running,
+  /// the old result will be ignored.
+  int _highRequestGeneration = 0;
+
+  // ============================================================
+  // Lifecycle
+  // ============================================================
+
+  @override
+  void initState() {
+    super.initState();
+
+    // ----------------------------------------------------------
+    // Visible pages
+    // ----------------------------------------------------------
+
+    _visiblePageSubscription = widget.stateController.stream
+        .where((event) => event is UpdateVisiblePages)
+        .listen((_) {
+          _checkVisible();
+        });
+
+    // ----------------------------------------------------------
+    // State events
+    // ----------------------------------------------------------
+
+    _stateSubscription = widget.stateController.stream.listen(_onStateEvent);
+
+    // ----------------------------------------------------------
+    // Initial LOW
+    // ----------------------------------------------------------
+
+    _loadLowQuality();
+
+    // ----------------------------------------------------------
+    // Initial visibility check
+    // ----------------------------------------------------------
+
+    _checkVisible();
+  }
+
+  @override
+  void dispose() {
+    // Invalidate any running HIGH request.
+    _highRequestGeneration++;
+
+    _loadHighImageDelayTimer?.cancel();
+
+    _stateSubscription?.cancel();
+    _visiblePageSubscription?.cancel();
+
+    _lowQualityImage = null;
+    _highQualityImage = null;
+    _lastHighQualityImage = null;
+
+    super.dispose();
+  }
+
+  // ============================================================
+  // Visible
+  // ============================================================
+
+  void _checkVisible() {
+    if (!mounted) return;
+
+    final visiblePages = widget.stateController.state.visiablePages;
+
+    final pageIndex = widget.offset.pageIndex;
+
+    if (!visiblePages.contains(pageIndex)) {
+      // --------------------------------------------------------
+      // Page is no longer visible.
+      // --------------------------------------------------------
+
+      _loadHighImageDelayTimer?.cancel();
+
+      // Invalidate current HIGH request.
+      _highRequestGeneration++;
+
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Page is visible.
+    // ----------------------------------------------------------
+
+    _loadHighQualityDelay();
+  }
+
+  // ============================================================
+  // State event
+  // ============================================================
+
+  void _onStateEvent(Object event) {
+    // ----------------------------------------------------------
+    // Zoom / Mobile Scale
+    // ----------------------------------------------------------
+
+    if (event is ZoomChanged || event is MobileScaleChanged) {
+      _loadHighImageDelayTimer?.cancel();
+
+      // Keep current HIGH while new HIGH is rendering.
+      _lastHighQualityImage = _highQualityImage;
+
+      // New HIGH is required.
+      _highQualityImage = null;
+
+      // Invalidate previous HIGH request.
+      _highRequestGeneration++;
+
+      _loadHighQualityDelay();
+
+      if (mounted) {
+        setState(() {});
+      }
+
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // User Jump
+    // ----------------------------------------------------------
+
+    if (event is UserJumpChanged) {
+      _loadHighQualityDelay();
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Scroll End
+    // ----------------------------------------------------------
+
+    if (event is ScrollEnd) {
+      _loadHighQualityDelay();
+      return;
+    }
+  }
+
+  // ============================================================
+  // LOW QUALITY
+  // ============================================================
+
+  Future<void> _loadLowQuality() async {
+    if (!mounted) return;
+
+    final state = widget.stateController.state;
+
+    final quality = state.pageImageLowQuality;
+
+    final width = widget.offset.width;
+    final height = widget.offset.height;
+
+    final pageIndex = widget.offset.pageIndex;
+
+    final imageType = state.renderImageType;
+
+    // ----------------------------------------------------------
+    // Already loaded with same size
+    // ----------------------------------------------------------
+
+    if (_lastWidth == width &&
+        _lastHeight == height &&
+        _lowQualityImage != null) {
+      _loadHighQuality();
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Cache
+    // ----------------------------------------------------------
+
+    final cached = widget.imageCache.get(
+      pageIndex,
+      width: width,
+      height: height,
+    );
+
+    if (cached != null) {
+      _lowQualityImage = cached;
+
+      // FIX:
+      // _lastWidth = width
+      // _lastHeight = height
+      _lastWidth = width;
+      _lastHeight = height;
+
+      // New LOW size means old HIGH is no longer valid.
+      _lastHighQualityImage = null;
+      _highQualityImage = null;
+
+      if (mounted) {
+        setState(() {});
+      }
+
+      _loadHighQuality();
+
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Render LOW
+    // ----------------------------------------------------------
+
+    final image = await widget.worker.getImageLowQuality(
+      pageIndex,
+      targetHeight: height.toInt(),
+      targetWidth: width.toInt(),
+      quality: quality,
+      renderImageType: imageType,
+    );
+
+    if (!mounted) return;
+
+    final bytes = image.unwrap();
+
+    // ----------------------------------------------------------
+    // Cache LOW
+    // ----------------------------------------------------------
+
+    widget.imageCache.put(
+      pageIndex,
+      bytes,
+      width: width,
+      height: height,
+      quality: quality,
+    );
+
+    // ----------------------------------------------------------
+    // Save LOW state
+    // ----------------------------------------------------------
+
+    _lastWidth = width;
+    _lastHeight = height;
+
+    _lowQualityImage = bytes;
+
+    if (mounted) {
+      setState(() {});
+    }
+
+    // ----------------------------------------------------------
+    // LOW finished -> HIGH
+    // ----------------------------------------------------------
+
+    _loadHighQuality();
+  }
+
+  // ============================================================
+  // HIGH QUALITY DELAY
+  // ============================================================
+
+  void _loadHighQualityDelay() {
+    _loadHighImageDelayTimer?.cancel();
+
+    _loadHighImageDelayTimer = Timer(_loadHighImageDelay, () {
+      if (!mounted) return;
+
+      _loadHighQuality();
+    });
+  }
+
+  // ============================================================
+  // HIGH QUALITY
+  // ============================================================
+
+  Future<void> _loadHighQuality() async {
+    if (!mounted) return;
+
+    // ----------------------------------------------------------
+    // LOW must be available first.
+    // ----------------------------------------------------------
+
+    if (_lowQualityImage == null) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // HIGH already available.
+    // ----------------------------------------------------------
+
+    if (_highQualityImage != null) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Page must be visible.
+    // ----------------------------------------------------------
+
+    final state = widget.stateController.state;
+
+    final visiblePages = state.visiablePages;
+
+    final pageIndex = widget.offset.pageIndex;
+
+    if (!visiblePages.contains(pageIndex)) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // New request generation
+    // ----------------------------------------------------------
+
+    final requestGeneration = ++_highRequestGeneration;
+
+    // ----------------------------------------------------------
+    // Render parameters
+    // ----------------------------------------------------------
+
+    final quality = state.pageImageHeightQuality;
+
+    final width = widget.offset.width;
+    final height = widget.offset.height;
+
+    final imageType = state.renderImageType;
+
+    // ----------------------------------------------------------
+    // Render HIGH
+    // ----------------------------------------------------------
+
+    final image = await widget.worker.getImageHighQuality(
+      pageIndex,
+      quality: quality,
+      targetHeight: height.toInt(),
+      targetWidth: width.toInt(),
+      renderImageType: imageType,
+    );
+
+    if (!mounted) return;
+
+    // ----------------------------------------------------------
+    // Request became outdated.
+    //
+    // Example:
+    //
+    // HIGH A started
+    // ZoomChanged
+    // HIGH B started
+    // HIGH A finished
+    //
+    // A must NOT update the UI.
+    // ----------------------------------------------------------
+
+    if (requestGeneration != _highRequestGeneration) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Page may have become invisible while rendering.
+    // ----------------------------------------------------------
+
+    final currentVisiblePages = widget.stateController.state.visiablePages;
+
+    if (!currentVisiblePages.contains(pageIndex)) {
+      return;
+    }
+
+    // ----------------------------------------------------------
+    // Get bytes
+    // ----------------------------------------------------------
+
+    final bytes = image.unwrap();
+
+    // ----------------------------------------------------------
+    // HIGH is now ready.
+    //
+    // New HIGH replaces previous HIGH.
+    // ----------------------------------------------------------
+
+    _lastHighQualityImage = null;
+    _highQualityImage = bytes;
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
+  @override
+  Widget build(BuildContext context) {
+    final footerBuilder = widget.controller.widgetBuilder.footerBuilder;
+
+    return Column(
+      children: [
+        Expanded(child: _buildImage()),
+
+        if (footerBuilder != null) footerBuilder(context, widget.offset),
+      ],
+    );
+  }
+
+  // ============================================================
+  // IMAGE
+  // ============================================================
+
+  Widget _buildImage() {
+    final image =
+        _highQualityImage ?? _lastHighQualityImage ?? _lowQualityImage;
+
+    /*
+    print(
+      'ReaderMultiThreadItem '
+      'page=${widget.offset.pageIndex} '
+      'low=${_lowQualityImage?.length} '
+      'high=${_highQualityImage?.length} '
+      'lastHigh=${_lastHighQualityImage?.length}',
+    );
+    */
+
+    if (image == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return SizedBox.expand(
+      child: Image.memory(
+        image,
+        fit: BoxFit.contain,
+        gaplessPlayback: true,
+        filterQuality: FilterQuality.high,
+      ),
+    );
+  }
+}

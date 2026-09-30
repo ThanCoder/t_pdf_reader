@@ -399,6 +399,11 @@ class _ReaderSingleThreadItemState extends State<ReaderSingleThreadItem> {
     final image = _highQualityImage ?? _lowQualityImage;
 
     if (image == null) {
+      final pageImageLoadingBuilder =
+          widget.controller.widgetBuilder.pageImageLoadingBuilder;
+      if (pageImageLoadingBuilder != null) {
+        return Center(child: pageImageLoadingBuilder(context, widget.offset));
+      }
       return const Center(child: CircularProgressIndicator());
     }
 

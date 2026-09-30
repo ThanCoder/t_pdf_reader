@@ -26,6 +26,16 @@ class TPdfEventBuilder {
 }
 
 class TPdfWidgetBuilder {
+  const TPdfWidgetBuilder({
+    this.footerBuilder,
+    this.scrollbarBuilder,
+    this.loadingBuilder,
+    this.errorBuilder,
+    this.placeholderBuilder,
+    this.pageImageLoadingBuilder,
+  });
+  final Widget Function(BuildContext context, PageOffset offset)?
+  pageImageLoadingBuilder;
   final Widget Function(BuildContext context, PageOffset pageOffset)?
   footerBuilder;
 
@@ -53,13 +63,6 @@ class TPdfWidgetBuilder {
   final Widget Function(BuildContext context, String errorMessage)?
   errorBuilder;
   final Widget Function(BuildContext context)? placeholderBuilder;
-  const TPdfWidgetBuilder({
-    this.footerBuilder,
-    this.scrollbarBuilder,
-    this.loadingBuilder,
-    this.errorBuilder,
-    this.placeholderBuilder,
-  });
 }
 
 class ScrollbarWidgetBuilder {
