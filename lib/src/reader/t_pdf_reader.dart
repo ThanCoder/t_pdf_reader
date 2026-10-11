@@ -134,11 +134,20 @@ class _TPdfReaderState extends State<TPdfReader>
   }
 
   Widget get _viewer {
+    final pdfViewerBackgroundWidget =
+        widget.controller.widgetBuilder.pdfViewerBackgroundWidget;
+
     return listenAllUiEvent(
       childBuilder: (constraints) {
         return listenReaderKeyboardEvents(
           child: Stack(
+            fit: .expand,
             children: [
+              if (pdfViewerBackgroundWidget != null)
+                pdfViewerBackgroundWidget(context)
+              else
+                Container(color: Colors.grey),
+
               buildPdfListWidget(constraints),
               buildScrollbarWidget(constraints),
               // testHeaderWidget(),

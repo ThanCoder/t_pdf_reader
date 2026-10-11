@@ -410,7 +410,7 @@ class _ReaderSingleThreadItemState extends State<ReaderSingleThreadItem> {
     return SizedBox.expand(
       child: Image.memory(
         image,
-        fit: BoxFit.contain,
+        fit: BoxFit.fitWidth,
         gaplessPlayback: true,
         filterQuality: FilterQuality.high,
       ),

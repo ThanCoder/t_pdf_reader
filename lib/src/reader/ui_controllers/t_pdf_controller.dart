@@ -33,7 +33,9 @@ class TPdfWidgetBuilder {
     this.errorBuilder,
     this.placeholderBuilder,
     this.pageImageLoadingBuilder,
+    this.pdfViewerBackgroundWidget,
   });
+  final Widget Function(BuildContext context)? pdfViewerBackgroundWidget;
   final Widget Function(BuildContext context, PageOffset offset)?
   pageImageLoadingBuilder;
   final Widget Function(BuildContext context, PageOffset pageOffset)?

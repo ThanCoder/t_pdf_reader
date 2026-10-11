@@ -540,7 +540,7 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
     return SizedBox.expand(
       child: Image.memory(
         image,
-        fit: BoxFit.contain,
+        fit: BoxFit.fitWidth,
         gaplessPlayback: true,
         filterQuality: FilterQuality.high,
       ),

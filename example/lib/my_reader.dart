@@ -17,10 +17,11 @@ class _MyReaderState extends State<MyReader> {
 
   @override
   void initState() {
+    final st = Stopwatch();
+    st.start();
     controller = TPdfController(
       pageImageWorkerType: .multiThread,
       widgetBuilder: TPdfWidgetBuilder(
-        placeholderBuilder: (context) => Placeholder(),
         footerBuilder: (context, pageOffset) => Container(
           width: pageOffset.width,
           color: Colors.white,
@@ -48,7 +49,9 @@ class _MyReaderState extends State<MyReader> {
       controller.stream.ready.listen((event) {
         // controller.action.jumpPage(4);
         controller.action.setFitZoom();
+        st.stop();
         print('reader ready');
+        print('ready timer: ${st.elapsed.inMilliseconds}ms');
         // controller.action.setZoom(1.7000000000000006);
         // controller.action.
       });
