@@ -9,14 +9,14 @@ class PageImageWorkerMultiThread extends IPageImageWorker {
 
   @override
   Future<Result<bool, PdfReaderWorkerOpenErrorResult>> open(String path) async {
-    final res = await Future.wait([_worker.open(path), _worker2.open(path)]);
-    return res.first;
-    // final res = await _worker.open(path);
-    // if (res.isErr) {
-    //   return res;
-    // }
-    // await _worker2.open(path);
-    // return res;
+    // final res = await Future.wait([_worker.open(path), _worker2.open(path)]);
+    // return res.first;
+    final res = await _worker.open(path);
+    if (res.isErr) {
+      return res;
+    }
+    await _worker2.open(path);
+    return res;
   }
 
   @override
