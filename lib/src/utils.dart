@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 extension SizeLabelIntExt on int {
   String fileSizeLabel({int asFixed = 2}) {
     return toDouble().fileSizeLabel(asFixed: asFixed);

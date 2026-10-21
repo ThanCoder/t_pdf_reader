@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 import 'dart:typed_data';
 
 import 'package:than_pdf_engine/core/high_level_api/reader/pdf_reader_worker.dart';
@@ -9,7 +11,10 @@ part 'page_image_worker_single_thread.dart';
 part 'page_image_worker_multi_thread.dart';
 
 enum IPageImageWorkerType {
+  /// render single isolate
   singleThread,
+
+  /// render multi isolate
   multiThread;
 
   String get label {

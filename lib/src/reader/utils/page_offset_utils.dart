@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 import 'dart:math';
 
 import 'package:than_pdf_engine/core/models/page_size.dart';

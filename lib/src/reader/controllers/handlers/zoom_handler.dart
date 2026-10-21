@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 part of '../reader_state_controller.dart';
 
 mixin ZoomHandler on IReaderStateController {

@@ -306,6 +306,8 @@ The scrollbar builder receives the current page, allowing the scrollbar to also 
 
 # Custom Scrollbar UI
 
+* [Features](#features)
+
 You can create any Flutter widget for the scrollbar.
 
 ```dart
@@ -466,6 +468,8 @@ This can be used to monitor PDF page image caching and provide cache-related UI.
 
 # Dark Mode
 
+* [Features](#features)
+
 The reader can be combined with Flutter's `ColorFiltered` widget to create a custom dark reading mode.
 
 ```dart
@@ -508,9 +512,12 @@ IconButton(
 
 # Complete Example
 
+* [Features](#features)
+
 The following example demonstrates a custom reader toolbar, page navigation, zoom controls, dark mode, scrollbar customization, and cache monitoring.
 
 ```dart
+
 class MyReader extends StatefulWidget {
   const MyReader({super.key, required this.path});
   final String path;
@@ -524,7 +531,10 @@ class _MyReaderState extends State<MyReader> {
 
   @override
   void initState() {
+    final st = Stopwatch();
+    st.start();
     controller = TPdfController(
+      pageImageWorkerType: .multiThread,
       widgetBuilder: TPdfWidgetBuilder(
         footerBuilder: (context, pageOffset) => Container(
           width: pageOffset.width,
@@ -536,12 +546,6 @@ class _MyReaderState extends State<MyReader> {
             ),
           ),
         ),
-        scrollbarBuilder: (context, page) {
-          return .new(
-            widgetInfo: .new(thumbWidth: 20, thumbHeight: 40),
-            builder: defaultScrollbarGlow(thumbWidth: 20, thumbHeight: 40),
-          );
-        },
       ),
       eventBuilder: .new(
         onKeyEventAfterConfig: (node, event) {
@@ -557,17 +561,19 @@ class _MyReaderState extends State<MyReader> {
     );
     controller.attached.listen((_) {
       controller.stream.ready.listen((event) {
-        controller.action.setFitZoom();
+        // controller.action.jumpPage(4);
+        // controller.action.setFitZoom();
+        st.stop();
         print('reader ready');
-        // controller.action.jumpPage(100);
+        print('ready timer: ${st.elapsed.inMilliseconds}ms');
         // controller.action.setZoom(1.7000000000000006);
         // controller.action.
       });
-      controller.stream.zoomChanged.listen((_) {
-        print(
-          'zoom: ${controller.state.zoom} - currentOffsetX: ${controller.state.currentOffsetX}',
-        );
-      });
+      // controller.stream.zoomChanged.listen((_) {
+      //   print(
+      //     'zoom: ${controller.state.zoom} - currentOffsetX: ${controller.state.currentOffsetX}',
+      //   );
+      // });
     });
     super.initState();
   }
@@ -583,7 +589,7 @@ class _MyReaderState extends State<MyReader> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: .dark(),
+      data: darkMode ? .dark() : .light(),
       child: Scaffold(
         appBar: AppBar(title: Text('Pdf Reader')),
         body: StreamBuilder(
@@ -647,6 +653,11 @@ class _MyReaderState extends State<MyReader> {
                 ),
                 PdfScrollbarToggler(controller: controller),
                 PdfCacheImageListener(controller: controller),
+
+                PdfRenderImageTypeView(controller: controller),
+                PdfPreloadPageView(controller: controller),
+                PdfVisiableCachedPageView(controller: controller),
+                PdfThreadLabelView(controller: controller),
               ],
             ),
           ),
@@ -668,6 +679,8 @@ class _MyReaderState extends State<MyReader> {
 ---
 
 # Architecture
+
+* [Features](#features)
 
 The reader is designed around a controller-driven architecture.
 
@@ -693,6 +706,8 @@ This keeps the PDF rendering engine and reader state separate from application-s
 ---
 
 # Customization
+
+* [Features](#features)
 
 The reader is intentionally designed to be customizable.
 

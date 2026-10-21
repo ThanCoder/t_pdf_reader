@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
@@ -410,7 +412,8 @@ class _ReaderSingleThreadItemState extends State<ReaderSingleThreadItem> {
     return SizedBox.expand(
       child: Image.memory(
         image,
-        fit: BoxFit.fitWidth,
+        fit: .fitWidth,
+        width: widget.offset.width,
         gaplessPlayback: true,
         filterQuality: FilterQuality.high,
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// default scrollbar
 Widget defaultScrollbar1({
   required double thumbWidth,
   required double thumbHeight,
@@ -42,6 +43,7 @@ Widget defaultScrollbar1({
   );
 }
 
+/// Minimal
 Widget defaultScrollbarMinimal({
   required double thumbWidth,
   required double thumbHeight,
@@ -64,6 +66,7 @@ Widget defaultScrollbarMinimal({
   );
 }
 
+/// Neon
 Widget defaultScrollbarNeon({
   required double thumbWidth,
   required double thumbHeight,
@@ -113,6 +116,7 @@ Widget defaultScrollbarNeon({
   );
 }
 
+/// Cyber
 Widget defaultScrollbarCyber({
   required double thumbWidth,
   required double thumbHeight,
@@ -150,6 +154,7 @@ Widget defaultScrollbarCyber({
   );
 }
 
+/// Aurora
 Widget defaultScrollbarAurora({
   required double thumbWidth,
   required double thumbHeight,
@@ -186,6 +191,7 @@ Widget defaultScrollbarAurora({
   );
 }
 
+/// ScrollbarGlass
 Widget defaultScrollbarGlass({
   required double thumbWidth,
   required double thumbHeight,
@@ -216,6 +222,7 @@ Widget defaultScrollbarGlass({
   );
 }
 
+/// ScrollbarCyberDots
 Widget defaultScrollbarCyberDots({
   required double thumbWidth,
   required double thumbHeight,
@@ -259,6 +266,7 @@ Widget defaultScrollbarCyberDots({
   );
 }
 
+/// ScrollbarGlow
 Widget defaultScrollbarGlow({
   required double thumbWidth,
   required double thumbHeight,

@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 import 'package:t_pdf_reader/src/reader/ui_controllers/interfaces/i_controller_action.dart';
 import 'package:than_pdf_engine/core/low_level_api/pdf_document.dart';
 

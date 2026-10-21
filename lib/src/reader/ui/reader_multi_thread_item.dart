@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs
+
 import 'dart:async';
 import 'dart:typed_data';
 
@@ -507,24 +509,6 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
   // ============================================================
 
   Widget _buildImage() {
-    /*
-    print(
-      'ReaderMultiThreadItem '
-      'page=${widget.offset.pageIndex} '
-      'low=${_lowQualityImage?.length} '
-      'high=${_highQualityImage?.length} '
-      'lastHigh=${_lastHighQualityImage?.length}',
-    );
-    */
-
-    // ----------------------------------------------------------
-    // Priority:
-    //
-    // 1. New HIGH
-    // 2. Previous HIGH
-    // 3. LOW
-    // ----------------------------------------------------------
-
     final image =
         _highQualityImage ?? _lastHighQualityImage ?? _lowQualityImage;
 
@@ -540,7 +524,9 @@ class _ReaderMultiThreadItemState extends State<ReaderMultiThreadItem> {
     return SizedBox.expand(
       child: Image.memory(
         image,
-        fit: BoxFit.fitWidth,
+        fit: .fitWidth,
+        width: widget.offset.width,
+        // height: widget.offset.height,
         gaplessPlayback: true,
         filterQuality: FilterQuality.high,
       ),

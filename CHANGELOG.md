@@ -1,3 +1,7 @@
+# 1.6.0
+
+* Added Docs.
+
 # 1.5.0
 
 * Fixed -> `IPageImageWorkerType` with `multiThread`. error -> `android` 

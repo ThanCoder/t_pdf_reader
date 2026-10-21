@@ -48,7 +48,7 @@ class _MyReaderState extends State<MyReader> {
     controller.attached.listen((_) {
       controller.stream.ready.listen((event) {
         // controller.action.jumpPage(4);
-        controller.action.setFitZoom();
+        // controller.action.setFitZoom();
         st.stop();
         print('reader ready');
         print('ready timer: ${st.elapsed.inMilliseconds}ms');
@@ -61,6 +61,7 @@ class _MyReaderState extends State<MyReader> {
       //   );
       // });
     });
+
     super.initState();
   }
 
