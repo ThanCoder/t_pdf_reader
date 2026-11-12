@@ -13,12 +13,13 @@ dependencies:
   t_pdf_reader:
     path: ../
 
+  material_ui: ^1.11.0
   cupertino_icons: ^2.0.0
 
   t_widgets: ^2.6.1
   than_pkg: ^6.0.0
   desktop_drop: ^0.8.4
-  dart_core_extensions: ^0.7.0
+  dart_core_extensions: ^0.8.0
   pdfium_dart: ^0.4.0
   than_pdf_engine: ^1.2.0
 
