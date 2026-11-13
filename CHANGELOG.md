@@ -1,3 +1,7 @@
+# 2.0.0
+
+- Added `migrate_design_widgets`
+
 # 1.6.0
 
 * Added Docs.
