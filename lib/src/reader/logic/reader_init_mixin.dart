@@ -53,7 +53,7 @@ mixin ReaderInitMixin {
     );
     //set page state
     if (stateController.pages.isNotEmpty) {
-      stateController.state.totalPage = stateController.pages.length - 1;
+      stateController.state.totalPage = stateController.pages.length;
       stateController.state.page = 1;
     }
     stateController.addEvent(ReaderLoaded());

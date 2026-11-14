@@ -1,3 +1,7 @@
+# 2.1.0
+
+- Fixed `totalPage` 
+
 # 2.0.0
 
 - Added `migrate_design_widgets`
